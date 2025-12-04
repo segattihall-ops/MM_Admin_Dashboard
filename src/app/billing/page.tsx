@@ -5,6 +5,9 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BarChart, LineChart, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip, Bar, Line } from 'recharts';
 import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Terminal } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const revenueData = [
   { date: '01/24', revenue: 4000 }, { date: '02/24', revenue: 3000 }, { date: '03/24', revenue: 5000 },
@@ -25,6 +28,14 @@ const logsData = [
 
 const BillingPage = () => {
   return (
+    <>
+    <Alert className="mb-6">
+        <Terminal className="h-4 w-4" />
+        <AlertTitle>Modo de Desenvolvimento</AlertTitle>
+        <AlertDescription>
+          Esta página está usando dados de exemplo. Para conectar sua conta do Stripe, insira suas chaves de API na <Button variant="link" className="p-0 h-auto"><a href="/settings">página de configurações</a></Button>.
+        </AlertDescription>
+      </Alert>
     <Tabs defaultValue="overview">
         <TabsList className="mb-4">
             <TabsTrigger value="overview">Visão Geral</TabsTrigger>
@@ -114,6 +125,7 @@ const BillingPage = () => {
             </Card>
         </TabsContent>
     </Tabs>
+    </>
   );
 };
 

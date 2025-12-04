@@ -4,8 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Save, KeyRound, Bell, Shield } from 'lucide-react';
+import { Save, KeyRound, Bell, Shield, Info } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const SettingsPage = () => {
   return (
@@ -25,10 +26,21 @@ const SettingsPage = () => {
                     <CardTitle>Chaves de API</CardTitle>
                     <CardDescription>Gerencie chaves de API para serviços de terceiros.</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-6">
+                    <Alert>
+                        <Info className="h-4 w-4" />
+                        <AlertTitle>Gerenciamento de Chaves</AlertTitle>
+                        <AlertDescription>
+                            Suas chaves secretas são armazenadas de forma segura no servidor. Insira-as aqui para habilitar as integrações. As chaves publicáveis são seguras para serem usadas no cliente.
+                        </AlertDescription>
+                    </Alert>
                     <div className="space-y-2">
-                        <Label htmlFor="stripe-key">Chave Publicável do Stripe</Label>
-                        <Input id="stripe-key" placeholder="pk_test_..." />
+                        <Label htmlFor="stripe-publishable-key">Chave Publicável do Stripe</Label>
+                        <Input id="stripe-publishable-key" placeholder="pk_test_..." />
+                    </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="stripe-secret-key">Chave Secreta do Stripe</Label>
+                        <Input id="stripe-secret-key" type="password" placeholder="sk_test_..." />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="google-maps-key">Chave de API do Google Maps</Label>
