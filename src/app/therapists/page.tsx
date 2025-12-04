@@ -23,18 +23,31 @@ import {
   SheetFooter,
   SheetClose
 } from '@/components/ui/sheet';
-import { MoreHorizontal, PlusCircle, File, Search, ChevronDown } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { MoreHorizontal, PlusCircle, File, Search, ChevronDown, User, Edit, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { useState } from 'react';
-
-const therapistsData = [
-  { id: 'thr001', name: 'Dr. Evelyn Reed', specialty: 'Deep Tissue', status: 'Active', location: 'New York, USA' },
-  { id: 'thr002', name: 'Leo Carter', specialty: 'Swedish Massage', status: 'Pending', location: 'London, UK' },
-  { id: 'thr003', name: 'Mia Chen', specialty: 'Hot Stone', status: 'Inactive', location: 'Tokyo, Japan' },
-  { id: 'thr004', name: 'John Doe', specialty: 'Shiatsu', status: 'Active', location: 'San Francisco, USA' },
-];
+import { useState, useMemo } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { FirebaseClientProvider, useAuth, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { doc, setDoc, serverTimestamp, collection, deleteDoc, updateDoc } from 'firebase/firestore';
+import { toast } from '@/hooks/use-toast';
+import { useRouter } from 'next/navigation';
 
 const statusVariantMap: { [key: string]: 'default' | 'secondary' | 'destructive' } = {
   'Active': 'default',
@@ -42,8 +55,260 @@ const statusVariantMap: { [key: string]: 'default' | 'secondary' | 'destructive'
   'Inactive': 'destructive',
 };
 
-const TherapistsPage = () => {
-  const [isSheetOpen, setIsSheetOpen] = useState(false);
+const addTherapistSchema = z.object({
+  fullName: z.string().min(1, 'Full name is required'),
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
+});
+
+type AddTherapistForm = z.infer<typeof addTherapistSchema>;
+
+const editTherapistSchema = z.object({
+    fullName: z.string().min(1, 'Full name is required'),
+    email: z.string().email('Invalid email address'),
+    status: z.enum(['Active', 'Pending', 'Inactive']),
+    plan: z.string().min(1, 'Plan is required'),
+    planName: z.string().min(1, 'Plan name is required'),
+    subscriptionStatus: z.string().min(1, 'Subscription status is required'),
+});
+
+type EditTherapistForm = z.infer<typeof editTherapistSchema>;
+type Therapist = {
+    id: string;
+    user_id: string;
+    full_name: string;
+    email: string;
+    status: 'Active' | 'Pending' | 'Inactive';
+    plan: string;
+    plan_name: string;
+    subscription_status: string;
+    updated_at: any;
+};
+
+
+function AddTherapistSheet({ open, onOpenChange }: { open: boolean, onOpenChange: (open: boolean) => void }) {
+  const auth = useAuth();
+  const firestore = useFirestore();
+  const form = useForm<AddTherapistForm>({
+    resolver: zodResolver(addTherapistSchema),
+    defaultValues: {
+      fullName: '',
+      email: '',
+      password: '',
+    },
+  });
+
+  const onSubmit = async (data: AddTherapistForm) => {
+    if (!auth || !firestore) return;
+    try {
+      // Create user in Auth first, but don't sign them in on the admin client
+      const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
+      const user = userCredential.user;
+
+      const therapistProfile = {
+        user_id: user.uid,
+        full_name: data.fullName,
+        email: data.email,
+        status: 'Pending',
+        plan: 'Free',
+        plan_name: 'Free Tier',
+        subscription_status: 'Active',
+        updated_at: serverTimestamp(),
+      };
+      
+      await setDoc(doc(firestore, 'therapists', user.uid), therapistProfile);
+
+      toast({
+        title: 'Terapeuta Adicionado',
+        description: `${data.fullName} foi adicionado com sucesso.`,
+      });
+      onOpenChange(false);
+      form.reset();
+    } catch (error: any) {
+      console.error("Error creating therapist:", error);
+      toast({
+        variant: "destructive",
+        title: "Erro ao adicionar terapeuta.",
+        description: error.message || "Não foi possível criar o terapeuta.",
+      });
+    }
+  };
+
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent>
+        <SheetHeader>
+          <SheetTitle>Adicionar Novo Terapeuta</SheetTitle>
+          <SheetDescription>Preencha os detalhes para adicionar um novo terapeuta.</SheetDescription>
+        </SheetHeader>
+        <div className="p-4">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="fullName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nome Completo</FormLabel>
+                    <FormControl>
+                      <Input placeholder="John Doe" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input type="email" placeholder="john.doe@example.com" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Senha</FormLabel>
+                    <FormControl>
+                      <Input type="password" placeholder="••••••••" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+               <SheetFooter className="pt-4">
+                <Button type="submit" disabled={form.formState.isSubmitting}>
+                    {form.formState.isSubmitting ? 'Adicionando...' : 'Adicionar Terapeuta'}
+                </Button>
+                <SheetClose asChild>
+                  <Button variant="outline">Cancelar</Button>
+                </SheetClose>
+              </SheetFooter>
+            </form>
+          </Form>
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+}
+
+
+function EditTherapistSheet({ open, onOpenChange, therapist }: { open: boolean, onOpenChange: (open: boolean) => void, therapist: Therapist | null }) {
+  const firestore = useFirestore();
+  const form = useForm<EditTherapistForm>({
+    resolver: zodResolver(editTherapistSchema),
+    values: {
+        fullName: therapist?.full_name || '',
+        email: therapist?.email || '',
+        status: therapist?.status || 'Pending',
+        plan: therapist?.plan || '',
+        planName: therapist?.plan_name || '',
+        subscriptionStatus: therapist?.subscription_status || '',
+    }
+  });
+
+  const onSubmit = async (data: EditTherapistForm) => {
+    if (!firestore || !therapist) return;
+    try {
+      const therapistRef = doc(firestore, 'therapists', therapist.id);
+      await updateDoc(therapistRef, {
+        full_name: data.fullName,
+        email: data.email,
+        status: data.status,
+        plan: data.plan,
+        plan_name: data.planName,
+        subscription_status: data.subscriptionStatus,
+        updated_at: serverTimestamp(),
+      });
+
+      toast({
+        title: 'Terapeuta Atualizado',
+        description: 'As informações do terapeuta foram atualizadas com sucesso.',
+      });
+      onOpenChange(false);
+    } catch (error: any) {
+      console.error("Error updating therapist:", error);
+      toast({
+        variant: "destructive",
+        title: "Erro ao atualizar.",
+        description: error.message || "Não foi possível atualizar o terapeuta.",
+      });
+    }
+  };
+
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent>
+        <SheetHeader>
+          <SheetTitle>Editar Terapeuta</SheetTitle>
+          <SheetDescription>Atualize os detalhes do terapeuta.</SheetDescription>
+        </SheetHeader>
+        <div className="p-4">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              {/* Form fields for editing */}
+              <FormField control={form.control} name="fullName" render={({ field }) => (<FormItem><FormLabel>Nome Completo</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+              <FormField control={form.control} name="email" render={({ field }) => (<FormItem><FormLabel>Email</FormLabel><FormControl><Input type="email" {...field} /></FormControl><FormMessage /></FormItem>)} />
+              <FormField control={form.control} name="status" render={({ field }) => (<FormItem><FormLabel>Status</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+              <FormField control={form.control} name="plan" render={({ field }) => (<FormItem><FormLabel>Plano (ID)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+              <FormField control={form.control} name="planName" render={({ field }) => (<FormItem><FormLabel>Nome do Plano</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+              <FormField control={form.control} name="subscriptionStatus" render={({ field }) => (<FormItem><FormLabel>Status da Assinatura</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+
+              <SheetFooter className="pt-4">
+                <Button type="submit" disabled={form.formState.isSubmitting}>
+                  {form.formState.isSubmitting ? 'Salvando...' : 'Salvar Alterações'}
+                </Button>
+                <SheetClose asChild>
+                  <Button variant="outline">Cancelar</Button>
+                </SheetClose>
+              </SheetFooter>
+            </form>
+          </Form>
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+}
+
+function TherapistsPageContent() {
+  const router = useRouter();
+  const firestore = useFirestore();
+  const therapistsQuery = useMemoFirebase(() => firestore ? collection(firestore, 'therapists') : null, [firestore]);
+  const { data: therapists, isLoading } = useCollection<Therapist>(therapistsQuery);
+  
+  const [isAddSheetOpen, setIsAddSheetOpen] = useState(false);
+  const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
+  const [selectedTherapist, setSelectedTherapist] = useState<Therapist | null>(null);
+
+  const handleEdit = (therapist: Therapist) => {
+    setSelectedTherapist(therapist);
+    setIsEditSheetOpen(true);
+  };
+  
+  const handleDelete = async (therapistId: string) => {
+    if (!firestore) return;
+    try {
+      await deleteDoc(doc(firestore, 'therapists', therapistId));
+      toast({
+        title: 'Terapeuta Excluído',
+        description: 'O terapeuta foi removido com sucesso.',
+      });
+    } catch (error: any) {
+      console.error("Error deleting therapist:", error);
+      toast({
+        variant: "destructive",
+        title: "Erro ao excluir.",
+        description: error.message || "Não foi possível remover o terapeuta.",
+      });
+    }
+  };
 
   return (
     <>
@@ -54,7 +319,7 @@ const TherapistsPage = () => {
               <CardTitle className="font-headline">Gestão de Terapeutas</CardTitle>
               <CardDescription>Gerencie perfis, status e informações de terapeutas.</CardDescription>
             </div>
-            <Button size="sm" onClick={() => setIsSheetOpen(true)}>
+            <Button size="sm" onClick={() => setIsAddSheetOpen(true)}>
               <PlusCircle className="mr-2 h-4 w-4" />
               Adicionar Terapeuta
             </Button>
@@ -88,18 +353,23 @@ const TherapistsPage = () => {
             <TableHeader>
               <TableRow>
                 <TableHead>Nome</TableHead>
-                <TableHead>Especialidade</TableHead>
-                <TableHead>Localização</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Plano</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead><span className="sr-only">Ações</span></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {therapistsData.map((therapist) => (
+              {isLoading && (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center">Carregando...</TableCell>
+                </TableRow>
+              )}
+              {therapists?.map((therapist) => (
                 <TableRow key={therapist.id}>
-                  <TableCell className="font-medium">{therapist.name}</TableCell>
-                  <TableCell>{therapist.specialty}</TableCell>
-                  <TableCell>{therapist.location}</TableCell>
+                  <TableCell className="font-medium">{therapist.full_name}</TableCell>
+                  <TableCell>{therapist.email}</TableCell>
+                  <TableCell>{therapist.plan_name}</TableCell>
                   <TableCell>
                     <Badge variant={statusVariantMap[therapist.status]}>
                       {therapist.status}
@@ -114,9 +384,31 @@ const TherapistsPage = () => {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem>Ver Perfil</DropdownMenuItem>
-                        <DropdownMenuItem>Editar</DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive">Desativar</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => router.push(`/therapists/${therapist.id}`)}>
+                            <User className="mr-2 h-4 w-4" /> Ver Perfil
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleEdit(therapist)}>
+                            <Edit className="mr-2 h-4 w-4" /> Editar
+                        </DropdownMenuItem>
+                         <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                               <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive focus:text-destructive-foreground focus:bg-destructive">
+                                    <Trash2 className="mr-2 h-4 w-4" /> Excluir
+                                </DropdownMenuItem>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    Essa ação não pode ser desfeita. Isso excluirá permanentemente a conta do terapeuta.
+                                </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleDelete(therapist.id)} className="bg-destructive hover:bg-destructive/90">Excluir</AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
@@ -127,26 +419,20 @@ const TherapistsPage = () => {
         </CardContent>
       </Card>
 
-      <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-        <SheetContent>
-          <SheetHeader>
-            <SheetTitle>Adicionar Novo Terapeuta</SheetTitle>
-            <SheetDescription>Preencha os detalhes para adicionar um novo terapeuta.</SheetDescription>
-          </SheetHeader>
-          <div className="p-4">
-             {/* Form fields go here */}
-             <p className="text-center text-muted-foreground">Formulário de adição de terapeuta em breve.</p>
-          </div>
-          <SheetFooter>
-            <Button>Salvar</Button>
-            <SheetClose asChild>
-              <Button variant="outline">Cancelar</Button>
-            </SheetClose>
-          </SheetFooter>
-        </SheetContent>
-      </Sheet>
+      <FirebaseClientProvider>
+        <AddTherapistSheet open={isAddSheetOpen} onOpenChange={setIsAddSheetOpen} />
+        <EditTherapistSheet open={isEditSheetOpen} onOpenChange={setIsEditSheetOpen} therapist={selectedTherapist} />
+      </FirebaseClientProvider>
     </>
   );
 };
 
+const TherapistsPage = () => (
+    <FirebaseClientProvider>
+        <TherapistsPageContent />
+    </FirebaseClientProvider>
+);
+
 export default TherapistsPage;
+
+    
