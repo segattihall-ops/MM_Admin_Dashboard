@@ -144,7 +144,7 @@
         },
         "status": {
           "type": "string",
-          "description": "The current status of the therapist's profile (e.g., Pending, Active, Inactive)."
+          "description": "The current status of the therapist's profile (e.g., Pending, Active, Inactive, Rejected)."
         },
         "plan": {
           "type": "string",
@@ -164,12 +164,45 @@
           "format": "date-time"
         },
         "slug": {
-            "type": "string",
-            "description": "URL-friendly identifier for the therapist."
+          "type": "string",
+          "description": "URL-friendly identifier for the therapist."
         },
         "phone": {
-            "type": "string",
-            "description": "Phone number of the therapist."
+          "type": "string",
+          "description": "Phone number of the therapist."
+        },
+        "reviewed_at": {
+          "type": "string",
+          "description": "Timestamp of when the profile was reviewed.",
+          "format": "date-time"
+        },
+        "reviewed_by": {
+          "type": "string",
+          "description": "UID of the admin who reviewed the profile."
+        },
+        "rejection_reason": {
+          "type": "string",
+          "description": "Reason for profile rejection."
+        },
+        "document_url": {
+          "type": "string",
+          "description": "URL for the identity document.",
+          "format": "uri"
+        },
+        "card_url": {
+          "type": "string",
+          "description": "URL for the license/card document.",
+          "format": "uri"
+        },
+        "selfie_url": {
+          "type": "string",
+          "description": "URL for the selfie image.",
+          "format": "uri"
+        },
+        "signed_term_url": {
+          "type": "string",
+          "description": "URL for the signed term document.",
+          "format": "uri"
         }
       },
       "required": [
