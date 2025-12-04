@@ -38,7 +38,7 @@ import { MoreHorizontal, PlusCircle, File, Search, ChevronDown, User, Edit, Tras
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -79,10 +79,13 @@ type Therapist = {
     user_id: string;
     full_name: string;
     email: string;
+    slug?: string;
+    phone?: string;
     status: 'Active' | 'Pending' | 'Inactive';
     plan: string;
     plan_name: string;
     subscription_status: string;
+    created_at: any;
     updated_at: any;
 };
 
@@ -115,6 +118,7 @@ function AddTherapistSheet({ open, onOpenChange }: { open: boolean, onOpenChange
         plan: 'free',
         plan_name: 'Free Tier',
         subscription_status: 'Active',
+        created_at: serverTimestamp(),
         updated_at: serverTimestamp(),
       };
       
@@ -306,6 +310,8 @@ function TherapistsPageContent() {
   const [isAddSheetOpen, setIsAddSheetOpen] = useState(false);
   const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
   const [selectedTherapist, setSelectedTherapist] = useState<Therapist | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('All');
 
   const handleEdit = (therapist: Therapist) => {
     setSelectedTherapist(therapist);
@@ -330,6 +336,47 @@ function TherapistsPageContent() {
     }
   };
 
+  const handleExport = () => {
+    if (!filteredTherapists) return;
+    const headers = ['full_name', 'email', 'plan', 'status', 'created_at', 'updated_at'];
+    const csvContent = [
+      headers.join(','),
+      ...filteredTherapists.map(t => [
+        `"${t.full_name}"`,
+        t.email,
+        t.plan,
+        t.status,
+        t.created_at?.toDate()?.toISOString() || '',
+        t.updated_at?.toDate()?.toISOString() || '',
+      ].join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    if (link.href) {
+      link.href = URL.createObjectURL(blob);
+      link.download = 'therapists.csv';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
+  
+  const filteredTherapists = useMemo(() => {
+    return therapists?.filter(therapist => {
+        const searchLower = searchTerm.toLowerCase();
+        const matchesSearch = searchTerm === '' ||
+            therapist.full_name.toLowerCase().includes(searchLower) ||
+            therapist.email.toLowerCase().includes(searchLower) ||
+            therapist.slug?.toLowerCase().includes(searchLower) ||
+            therapist.phone?.includes(searchTerm);
+
+        const matchesStatus = statusFilter === 'All' || therapist.status === statusFilter;
+
+        return matchesSearch && matchesStatus;
+    });
+  }, [therapists, searchTerm, statusFilter]);
+
   return (
     <>
       <Card>
@@ -347,7 +394,12 @@ function TherapistsPageContent() {
           <div className="flex items-center gap-2 pt-4">
             <div className="relative flex-1">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Buscar terapeutas..." className="pl-8" />
+              <Input 
+                placeholder="Buscar terapeutas..." 
+                className="pl-8" 
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -356,13 +408,13 @@ function TherapistsPageContent() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
-                <DropdownMenuItem>Todos</DropdownMenuItem>
-                <DropdownMenuItem>Active</DropdownMenuItem>
-                <DropdownMenuItem>Pending</DropdownMenuItem>
-                <DropdownMenuItem>Inactive</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setStatusFilter('All')}>Todos</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setStatusFilter('Active')}>Active</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setStatusFilter('Pending')}>Pending</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setStatusFilter('Inactive')}>Inactive</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <Button variant="outline">
+            <Button variant="outline" onClick={handleExport}>
               <File className="mr-2 h-4 w-4" />
               Exportar
             </Button>
@@ -385,7 +437,7 @@ function TherapistsPageContent() {
                   <TableCell colSpan={5} className="text-center">Carregando...</TableCell>
                 </TableRow>
               )}
-              {therapists?.map((therapist) => (
+              {filteredTherapists?.map((therapist) => (
                 <TableRow key={therapist.id}>
                   <TableCell className="font-medium">{therapist.full_name}</TableCell>
                   <TableCell>{therapist.email}</TableCell>

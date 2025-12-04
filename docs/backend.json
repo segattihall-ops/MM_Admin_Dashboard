@@ -162,6 +162,14 @@
           "type": "string",
           "description": "Timestamp of the last profile update.",
           "format": "date-time"
+        },
+        "slug": {
+            "type": "string",
+            "description": "URL-friendly identifier for the therapist."
+        },
+        "phone": {
+            "type": "string",
+            "description": "Phone number of the therapist."
         }
       },
       "required": [
