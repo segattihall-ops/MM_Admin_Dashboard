@@ -17,15 +17,9 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
-const revenueData = [
-  { date: '01/24', revenue: 0 }, { date: '02/24', revenue: 0 }, { date: '03/24', revenue: 0 },
-  { date: '04/24', revenue: 0 }, { date: '05/24', revenue: 0 }, { date: '06/24', revenue: 0 }
-];
-
-const subscriptionsChartData = [
-  { date: '01/24', count: 0 }, { date: '02/24', count: 0 }, { date: '03/24', count: 0 },
-  { date: '04/24', count: 0 }, { date: '05/24', count: 0 }, { date: '06/24', count: 0 }
-];
+// Os dados estáticos foram removidos e serão substituídos por dados dinâmicos do Firestore.
+const revenueData: any[] = [];
+const subscriptionsChartData: any[] = [];
 
 
 type Subscription = {
@@ -160,15 +154,21 @@ const BillingPageContent = () => {
                         <CardTitle className="font-headline">Receita (Últimos 6 meses)</CardTitle>
                     </CardHeader>
                     <CardContent>
-                         <ChartContainer config={{ revenue: { label: 'Revenue', color: 'hsl(var(--primary))' } }} className="h-[300px] w-full">
-                            <BarChart data={revenueData}>
-                                <CartesianGrid vertical={false} />
-                                <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} />
-                                <YAxis tickLine={false} axisLine={false} tickMargin={8} />
-                                <Tooltip content={<ChartTooltipContent />} />
-                                <Bar dataKey="revenue" fill="var(--color-revenue)" radius={4} />
-                            </BarChart>
-                        </ChartContainer>
+                         {revenueData.length > 0 ? (
+                            <ChartContainer config={{ revenue: { label: 'Revenue', color: 'hsl(var(--primary))' } }} className="h-[300px] w-full">
+                                <BarChart data={revenueData}>
+                                    <CartesianGrid vertical={false} />
+                                    <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} />
+                                    <YAxis tickLine={false} axisLine={false} tickMargin={8} />
+                                    <Tooltip content={<ChartTooltipContent />} />
+                                    <Bar dataKey="revenue" fill="var(--color-revenue)" radius={4} />
+                                </BarChart>
+                            </ChartContainer>
+                         ) : (
+                            <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                                Dados de receita aparecerão aqui.
+                            </div>
+                         )}
                     </CardContent>
                 </Card>
                  <Card>
@@ -176,15 +176,21 @@ const BillingPageContent = () => {
                         <CardTitle className="font-headline">Novas Assinaturas</CardTitle>
                     </CardHeader>
                     <CardContent>
-                         <ChartContainer config={{ count: { label: 'Subscriptions', color: 'hsl(var(--primary))' } }} className="h-[300px] w-full">
-                            <LineChart data={subscriptionsChartData}>
-                                <CartesianGrid vertical={false} />
-                                <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} />
-                                <YAxis tickLine={false} axisLine={false} tickMargin={8} />
-                                <Tooltip content={<ChartTooltipContent />} />
-                                <Line type="monotone" dataKey="count" stroke="var(--color-count)" />
-                            </LineChart>
-                        </ChartContainer>
+                        {subscriptionsChartData.length > 0 ? (
+                            <ChartContainer config={{ count: { label: 'Subscriptions', color: 'hsl(var(--primary))' } }} className="h-[300px] w-full">
+                                <LineChart data={subscriptionsChartData}>
+                                    <CartesianGrid vertical={false} />
+                                    <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} />
+                                    <YAxis tickLine={false} axisLine={false} tickMargin={8} />
+                                    <Tooltip content={<ChartTooltipContent />} />
+                                    <Line type="monotone" dataKey="count" stroke="var(--color-count)" />
+                                </LineChart>
+                            </ChartContainer>
+                        ) : (
+                            <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                                Dados de novas assinaturas aparecerão aqui.
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
             </div>
