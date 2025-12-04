@@ -211,6 +211,45 @@
         "email",
         "status"
       ]
+    },
+    "Payment": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Payment",
+      "type": "object",
+      "description": "Represents a single payment transaction.",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the payment." },
+        "userId": { "type": "string", "description": "The ID of the user who made the payment." },
+        "amount": { "type": "number", "description": "The payment amount." },
+        "paid_at": { "type": "string", "format": "date-time", "description": "Timestamp of when the payment was made." },
+        "status": { "type": "string", "description": "The status of the payment (e.g., succeeded, failed)." }
+      },
+      "required": ["id", "userId", "amount", "paid_at", "status"]
+    },
+    "BillingEventLog": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Billing Event Log",
+      "type": "object",
+      "description": "Logs events from the billing system (e.g., Stripe webhooks).",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the event log." },
+        "event_type": { "type": "string", "description": "The type of event (e.g., 'invoice.payment_succeeded')." },
+        "payload": { "type": "object", "description": "The full event payload from the provider." },
+        "created_at": { "type": "string", "format": "date-time", "description": "Timestamp of when the event was logged." }
+      },
+      "required": ["id", "event_type", "payload", "created_at"]
+    },
+    "Settings": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Settings",
+      "type": "object",
+      "description": "Stores global application settings.",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the setting document (e.g., 'stripe')." },
+        "stripe_public_key": { "type": "string", "description": "The publishable API key for Stripe." },
+        "stripe_secret_key": { "type": "string", "description": "The secret API key for Stripe (stored securely)." }
+      },
+      "required": ["id"]
     }
   },
   "auth": {
@@ -273,7 +312,7 @@
           ]
         }
       },
-       {
+      {
         "path": "/therapists/{therapistId}",
         "definition": {
           "entityName": "Therapist",
@@ -288,8 +327,36 @@
             }
           ]
         }
+      },
+      {
+        "path": "/payments/{paymentId}",
+        "definition": {
+          "entityName": "Payment",
+          "schema": { "$ref": "#/backend/entities/Payment" },
+          "description": "Stores individual payment records. Typically only accessible by admins or server-side functions.",
+          "params": [{ "name": "paymentId", "description": "The unique identifier of the payment." }]
+        }
+      },
+      {
+        "path": "/billing_event_logs/{logId}",
+        "definition": {
+          "entityName": "BillingEventLog",
+          "schema": { "$ref": "#/backend/entities/BillingEventLog" },
+          "description": "Logs all incoming webhook events from the billing provider. Restricted to admin or server-side access.",
+          "params": [{ "name": "logId", "description": "The unique identifier of the log entry." }]
+        }
+      },
+      {
+        "path": "/settings/{settingId}",
+        "definition": {
+          "entityName": "Settings",
+          "schema": { "$ref": "#/backend/entities/Settings" },
+          "description": "Stores global, non-user-specific settings. Access should be highly restricted.",
+          "params": [{ "name": "settingId", "description": "The unique name of the setting document (e.g., 'billing')." }]
+        }
       }
     ],
-    "reasoning": "The Firestore data structure is designed to support a massage directory with user subscriptions. It prioritizes authorization independence by structuring data to avoid hierarchical `get()` calls in security rules. This is achieved by storing user-related data under their respective user IDs, enabling simple, path-based security rules.\n\nThe `/users/{userId}` collection stores user profiles.  Subscriptions are stored in a subcollection `/users/{userId}/subscriptions/{subscriptionId}` to represent the `User 1:N Subscription` relationship. Plans are stored in a top-level `/plans/{planId}` collection. The `/therapists/{therapistId}` collection stores public profiles for therapists, which can be listed by all users.\n\nAuthorization Independence: The structure places user-owned data under `/users/{userId}`, allowing rules to directly verify `request.auth.uid == userId` without needing to fetch parent document data.  Since subscriptions are nested under the user, the rules can also ensure that only the user can manage their own subscriptions.\n\nQAPs (Rules are not Filters):  The segregation of user data into individual user-scoped collections allows for secure `list` operations.  For example, administrators can `list` all users in the `/users` collection, and users can securely `list` their subscriptions from `/users/{userId}/subscriptions`.  No complex filtering is required in the rules.\n\nThis design promotes clear, maintainable security rules and supports atomic operations, enhancing data integrity and application scalability."
+    "reasoning": "The Firestore data structure is designed to support a massage directory with user subscriptions. It prioritizes authorization independence by structuring data to avoid hierarchical `get()` calls in security rules. This is achieved by storing user-related data under their respective user IDs, enabling simple, path-based security rules.\n\nThe `/users/{userId}` collection stores user profiles.  Subscriptions are stored in a subcollection `/users/{userId}/subscriptions/{subscriptionId}` to represent the `User 1:N Subscription` relationship. Plans are stored in a top-level `/plans/{planId}` collection. The `/therapists/{therapistId}` collection stores public profiles for therapists, which can be listed by all users. New top-level collections for `/payments`, `/billing_event_logs`, and `/settings` have been added to support a robust billing integration, keeping sensitive financial data and configurations separate and secure.\n\nAuthorization Independence: The structure places user-owned data under `/users/{userId}`, allowing rules to directly verify `request.auth.uid == userId` without needing to fetch parent document data.  Since subscriptions are nested under the user, the rules can also ensure that only the user can manage their own subscriptions.\n\nQAPs (Rules are not Filters):  The segregation of user data into individual user-scoped collections allows for secure `list` operations.  For example, administrators can `list` all users in the `/users` collection, and users can securely `list` their subscriptions from `/users/{userId}/subscriptions`.  No complex filtering is required in the rules.\n\nThis design promotes clear, maintainable security rules and supports atomic operations, enhancing data integrity and application scalability."
   }
 }
+    
