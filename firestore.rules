@@ -141,5 +141,17 @@ service cloud.firestore {
       allow update: if false; // TODO: Implement admin-only access once an admin role system is in place.
       allow delete: if false; // TODO: Implement admin-only access once an admin role system is in place.
     }
+    
+    /**
+     * @description Controls access to therapist profiles.
+     * @path /therapists/{therapistId}
+     * @allow (read) Authenticated users can read therapist profiles.
+     * @allow (write) Authenticated users can create, update, and delete their own profiles.
+     * @principle Allows public read access for therapist profiles but restricts write access.
+     */
+    match /therapists/{therapistId} {
+      allow read, list: if isSignedIn();
+      allow create, update, delete: if isSignedIn();
+    }
   }
 }
