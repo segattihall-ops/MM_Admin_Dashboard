@@ -17,10 +17,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
-// Os dados estáticos foram removidos e serão substituídos por dados dinâmicos do Firestore.
 const revenueData: any[] = [];
 const subscriptionsChartData: any[] = [];
-
 
 type Subscription = {
   id: string;

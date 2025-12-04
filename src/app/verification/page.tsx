@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -22,19 +22,21 @@ function VerificationPageContent() {
     return query(collection(firestore, 'therapists'), where('status', '==', 'Pending'));
   }, [firestore]);
 
-  const { data: pendingTherapists, isLoading: isLoadingTherapists, refetch } = useCollection<Therapist>(pendingTherapistsQuery);
+  const { data: pendingTherapists, isLoading: isLoadingTherapists } = useCollection<Therapist>(pendingTherapistsQuery);
 
   const [selectedTherapist, setSelectedTherapist] = useState<Therapist | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
 
   // Automatically select the first therapist if the list loads/changes
-  useState(() => {
-    if (pendingTherapists && pendingTherapists.length > 0) {
-      setSelectedTherapist(pendingTherapists[0]);
-    } else {
-      setSelectedTherapist(null);
+  useEffect(() => {
+    if (!isLoadingTherapists && pendingTherapists) {
+      if(pendingTherapists.length > 0 && !selectedTherapist) {
+        setSelectedTherapist(pendingTherapists[0]);
+      } else if (pendingTherapists.length === 0) {
+        setSelectedTherapist(null);
+      }
     }
-  });
+  }, [pendingTherapists, isLoadingTherapists, selectedTherapist]);
 
   const handleVerification = async (therapistId: string, newStatus: 'Active' | 'Rejected') => {
     if (!firestore || !auth?.currentUser) return;
@@ -58,10 +60,6 @@ function VerificationPageContent() {
         title: 'Verificação Completa',
         description: `O terapeuta foi ${newStatus === 'Active' ? 'aprovado' : 'rejeitado'}.`,
       });
-      // Refresh the list after update
-      if(refetch){
-        await refetch();
-      }
       // After update, select the next therapist in the list or null if none left
       const updatedList = pendingTherapists?.filter(t => t.id !== therapistId) || [];
       setSelectedTherapist(updatedList.length > 0 ? updatedList[0] : null);
