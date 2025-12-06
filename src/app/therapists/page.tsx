@@ -25,13 +25,13 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { MoreHorizontal, PlusCircle, File, Search, ChevronDown, User, Edit, Trash2 } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, File, Search, ChevronDown, User, Edit, UserX } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useState, useMemo } from 'react';
-import { FirebaseClientProvider, useFirestore, useCollection, useMemoFirebase, deleteDocumentNonBlocking } from '@/firebase';
-import { doc, collection } from 'firebase/firestore';
+import { FirebaseClientProvider, useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking } from '@/firebase';
+import { doc, collection, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { AddTherapistSheet } from './AddTherapistSheet';
@@ -76,13 +76,13 @@ function TherapistsPageContent() {
     setIsEditSheetOpen(true);
   };
   
-  const handleDelete = (therapistId: string) => {
+  const handleDeactivate = (therapistId: string) => {
     if (!firestore) return;
     const docRef = doc(firestore, 'therapists', therapistId);
-    deleteDocumentNonBlocking(docRef);
+    updateDocumentNonBlocking(docRef, { status: 'Inactive', updatedAt: serverTimestamp() });
     toast({
-      title: 'Therapist Deletion Initiated',
-      description: 'The therapist will be removed shortly.',
+      title: 'Therapist Deactivation Initiated',
+      description: 'The therapist status will be updated to Inactive shortly.',
     });
   };
 
@@ -215,19 +215,19 @@ function TherapistsPageContent() {
                          <AlertDialog>
                             <AlertDialogTrigger asChild>
                                <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive focus:text-destructive-foreground focus:bg-destructive">
-                                    <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                    <UserX className="mr-2 h-4 w-4" /> Deactivate
                                 </DropdownMenuItem>
                             </AlertDialogTrigger>
                             <AlertDialogContent>
                                 <AlertDialogHeader>
                                 <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                                 <AlertDialogDescription>
-                                    This action cannot be undone. This will permanently delete the therapist's account.
+                                    This will set the therapist's status to "Inactive". They will not be able to log in but their data will be preserved.
                                 </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
                                 <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => handleDelete(therapist.id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+                                <AlertDialogAction onClick={() => handleDeactivate(therapist.id)} className="bg-destructive hover:bg-destructive/90">Deactivate</AlertDialogAction>
                                 </AlertDialogFooter>
                             </AlertDialogContent>
                         </AlertDialog>
@@ -236,6 +236,13 @@ function TherapistsPageContent() {
                   </TableCell>
                 </TableRow>
               ))}
+               {!isLoading && filteredTherapists?.length === 0 && (
+                <TableRow>
+                    <TableCell colSpan={5} className="text-center text-muted-foreground py-10">
+                        No therapists found for the selected criteria.
+                    </TableCell>
+                </TableRow>
+               )}
             </TableBody>
           </Table>
         </CardContent>
@@ -254,3 +261,5 @@ const TherapistsPage = () => (
 );
 
 export default TherapistsPage;
+
+    

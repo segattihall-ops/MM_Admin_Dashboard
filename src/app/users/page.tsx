@@ -25,7 +25,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { MoreHorizontal, PlusCircle, Calendar as CalendarIcon, Trash2 } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Calendar as CalendarIcon, UserX } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import {
@@ -43,15 +43,16 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useState } from 'react';
-import { FirebaseClientProvider, useAuth, useFirestore, useCollection, useMemoFirebase, setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
+import { FirebaseClientProvider, useAuth, useFirestore, useCollection, useMemoFirebase, setDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { doc, setDoc, collection, query, where, Timestamp } from 'firebase/firestore';
+import { doc, setDoc, collection, query, where, Timestamp, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow, format } from 'date-fns';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import type { DateRange } from 'react-day-picker';
+import { Badge } from '@/components/ui/badge';
 
 const addUserSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
@@ -68,6 +69,12 @@ type User = {
   lastName: string;
   email: string;
   lastLogin?: { toDate: () => Date };
+  status: 'Active' | 'Inactive';
+};
+
+const statusVariantMap: { [key: string]: 'default' | 'destructive' } = {
+  'Active': 'default',
+  'Inactive': 'destructive',
 };
 
 function AddUserSheet({ open, onOpenChange }: { open: boolean, onOpenChange: (open: boolean) => void }) {
@@ -97,6 +104,7 @@ function AddUserSheet({ open, onOpenChange }: { open: boolean, onOpenChange: (op
         email: data.email,
         lastLogin: new Date(),
         created_at: Timestamp.now(),
+        status: 'Active',
       };
       
       const userDocRef = doc(firestore, 'users', user.uid);
@@ -222,13 +230,13 @@ function UsersPageContent() {
     return `${formatDistanceToNow(date)} ago`;
   }
 
-  const handleDeleteUser = (userId: string) => {
+  const handleDeactivateUser = (userId: string) => {
     if (!firestore) return;
     const docRef = doc(firestore, 'users', userId);
-    deleteDocumentNonBlocking(docRef);
+    updateDocumentNonBlocking(docRef, { status: 'Inactive' });
     toast({
-      title: 'User Deletion Initiated',
-      description: "The user's data will be removed shortly.",
+      title: 'User Deactivation Initiated',
+      description: "The user's status will be updated to Inactive shortly.",
     });
   };
 
@@ -278,6 +286,7 @@ function UsersPageContent() {
               <TableRow>
                 <TableHead>User</TableHead>
                 <TableHead>Email</TableHead>
+                <TableHead>Status</TableHead>
                 <TableHead>Last Login</TableHead>
                 <TableHead>
                   <span className="sr-only">Actions</span>
@@ -287,7 +296,7 @@ function UsersPageContent() {
             <TableBody>
               {isLoading && (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center">Loading...</TableCell>
+                  <TableCell colSpan={5} className="text-center">Loading...</TableCell>
                 </TableRow>
               )}
               {usersData?.map((user) => (
@@ -304,6 +313,11 @@ function UsersPageContent() {
                     </div>
                   </TableCell>
                   <TableCell>{user.email}</TableCell>
+                  <TableCell>
+                    <Badge variant={statusVariantMap[user.status] || 'default'}>
+                      {user.status || 'Active'}
+                    </Badge>
+                  </TableCell>
                   <TableCell>{getTimeAgo(user.lastLogin?.toDate())}</TableCell>
                   <TableCell>
                     <DropdownMenu>
@@ -319,19 +333,19 @@ function UsersPageContent() {
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive focus:text-destructive-foreground focus:bg-destructive">
-                              <Trash2 className="mr-2 h-4 w-4" /> Delete
+                              <UserX className="mr-2 h-4 w-4" /> Deactivate
                             </DropdownMenuItem>
                           </AlertDialogTrigger>
                           <AlertDialogContent>
                             <AlertDialogHeader>
                               <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                               <AlertDialogDescription>
-                                This action cannot be undone. This will permanently delete the user's data from the database.
+                                This action will set the user's status to "Inactive". Their data will be preserved but they won't be able to log in.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                               <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleDeleteUser(user.id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+                              <AlertDialogAction onClick={() => handleDeactivateUser(user.id)} className="bg-destructive hover:bg-destructive/90">Deactivate</AlertDialogAction>
                             </AlertDialogFooter>
                           </AlertDialogContent>
                         </AlertDialog>
@@ -342,7 +356,7 @@ function UsersPageContent() {
               ))}
                {!isLoading && usersData?.length === 0 && (
                 <TableRow>
-                    <TableCell colSpan={4} className="text-center text-muted-foreground py-10">
+                    <TableCell colSpan={5} className="text-center text-muted-foreground py-10">
                         No users found for the selected criteria.
                     </TableCell>
                 </TableRow>
