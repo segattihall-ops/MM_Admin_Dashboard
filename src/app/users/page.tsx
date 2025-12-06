@@ -14,7 +14,18 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, PlusCircle, Calendar as CalendarIcon } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { MoreHorizontal, PlusCircle, Calendar as CalendarIcon, Trash2 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import {
@@ -32,7 +43,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useState } from 'react';
-import { FirebaseClientProvider, useAuth, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { FirebaseClientProvider, useAuth, useFirestore, useCollection, useMemoFirebase, setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc, collection, query, where, Timestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
@@ -85,9 +96,12 @@ function AddUserSheet({ open, onOpenChange }: { open: boolean, onOpenChange: (op
         lastName: data.lastName,
         email: data.email,
         lastLogin: new Date(),
+        created_at: Timestamp.now(),
       };
       
-      await setDoc(doc(firestore, 'users', user.uid), userProfile);
+      const userDocRef = doc(firestore, 'users', user.uid);
+      // Use the non-blocking fire-and-forget function
+      setDocumentNonBlocking(userDocRef, userProfile, { merge: true });
 
       toast({
         title: 'User Added',
@@ -188,12 +202,15 @@ function UsersPageContent() {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [date, setDate] = useState<Date | undefined>();
   const firestore = useFirestore();
+  const { toast } = useToast();
 
   const usersQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     const baseQuery = collection(firestore, 'users');
     if (date) {
-        return query(baseQuery, where('lastLogin', '>=', Timestamp.fromDate(date)));
+        const startOfDay = new Date(date);
+        startOfDay.setHours(0, 0, 0, 0);
+        return query(baseQuery, where('lastLogin', '>=', Timestamp.fromDate(startOfDay)));
     }
     return query(baseQuery);
   }, [firestore, date]);
@@ -204,6 +221,16 @@ function UsersPageContent() {
     if(!date) return 'Never';
     return `${formatDistanceToNow(date)} ago`;
   }
+
+  const handleDeleteUser = (userId: string) => {
+    if (!firestore) return;
+    const docRef = doc(firestore, 'users', userId);
+    deleteDocumentNonBlocking(docRef);
+    toast({
+      title: 'User Deletion Initiated',
+      description: "The user's data will be removed shortly.",
+    });
+  };
 
   return (
     <>
@@ -289,7 +316,25 @@ function UsersPageContent() {
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem>View Profile</DropdownMenuItem>
                         <DropdownMenuItem>Edit</DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive focus:text-destructive-foreground focus:bg-destructive">Delete</DropdownMenuItem>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive focus:text-destructive-foreground focus:bg-destructive">
+                              <Trash2 className="mr-2 h-4 w-4" /> Delete
+                            </DropdownMenuItem>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This action cannot be undone. This will permanently delete the user's data from the database.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDeleteUser(user.id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
@@ -298,7 +343,7 @@ function UsersPageContent() {
                {!isLoading && usersData?.length === 0 && (
                 <TableRow>
                     <TableCell colSpan={4} className="text-center text-muted-foreground py-10">
-                        No users found.
+                        No users found for the selected criteria.
                     </TableCell>
                 </TableRow>
                )}
@@ -319,3 +364,5 @@ export default function UsersPage() {
         </FirebaseClientProvider>
     )
 }
+
+    
