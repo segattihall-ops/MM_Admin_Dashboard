@@ -10,7 +10,7 @@ import Link from 'next/link';
 
 const AppHeader = () => {
   return (
-    <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background/60 backdrop-blur-lg px-4 lg:h-[60px] lg:px-6">
+    <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background/60 backdrop-blur-xl px-4 lg:h-[60px] lg:px-6">
       <div className="flex items-center gap-2">
         <SidebarTrigger className="md:hidden" />
         <Link href="/dashboard" className="md:hidden flex items-center gap-2">
