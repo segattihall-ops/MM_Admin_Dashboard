@@ -89,7 +89,7 @@ body {
     background-attachment: fixed;
   }
 
-  .glassmorphism {
-    @apply bg-card/60 backdrop-blur-xl border border-border/20 shadow-2xl shadow-primary/5;
+  .glass-view {
+    @apply bg-card/75 backdrop-blur-xl border border-white/10 shadow-2xl shadow-black/20;
   }
 }
