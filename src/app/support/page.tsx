@@ -21,11 +21,11 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const ticketsData = [
-  { id: 'TKT-001', subject: 'Problema de pagamento', user: 'user_123', status: 'Open', priority: 'High', agent: 'Admin', category: 'Faturamento' },
-  { id: 'TKT-002', subject: 'Não consigo fazer login', user: 'user_456', status: 'In Progress', priority: 'Medium', agent: 'Support Team', category: 'Dúvidas' },
-  { id: 'TKT-003', subject: 'Como atualizo meu perfil?', user: 'user_789', status: 'Closed', priority: 'Low', agent: 'Admin', category: 'Dúvidas' },
-  { id: 'TKT-004', subject: 'Comportamento inadequado do terapeuta', user: 'user_abc', status: 'Open', priority: 'High', agent: 'Moderation', category: 'Denúncias' },
-  { id: 'TKT-005', subject: 'Cobrança duplicada na fatura', user: 'user_def', status: 'In Progress', priority: 'High', agent: 'Admin', category: 'Faturamento' },
+  { id: 'TKT-001', subject: 'Payment Issue', user: 'user_123', status: 'Open', priority: 'High', agent: 'Admin', category: 'Billing' },
+  { id: 'TKT-002', subject: 'Can\'t log in', user: 'user_456', status: 'In Progress', priority: 'Medium', agent: 'Support Team', category: 'Questions' },
+  { id: 'TKT-003', subject: 'How do I update my profile?', user: 'user_789', status: 'Closed', priority: 'Low', agent: 'Admin', category: 'Questions' },
+  { id: 'TKT-004', subject: 'Inappropriate therapist behavior', user: 'user_abc', status: 'Open', priority: 'High', agent: 'Moderation', category: 'Reports' },
+  { id: 'TKT-005', subject: 'Duplicate charge on invoice', user: 'user_def', status: 'In Progress', priority: 'High', agent: 'Admin', category: 'Billing' },
 ];
 
 const statusVariant: { [key: string]: 'default' | 'secondary' | 'outline' } = {
@@ -36,44 +36,44 @@ const priorityVariant: { [key: string]: 'destructive' | 'default' | 'secondary' 
 };
 
 const categoryVariant: { [key: string]: 'default' | 'secondary' | 'destructive' | 'outline' } = {
-    'Faturamento': 'default',
-    'Dúvidas': 'secondary',
-    'Denúncias': 'destructive',
+    'Billing': 'default',
+    'Questions': 'secondary',
+    'Reports': 'destructive',
 };
 
 const SupportPage = () => {
-  const [filter, setFilter] = useState('Todos');
+  const [filter, setFilter] = useState('All');
 
   const filteredTickets = ticketsData.filter(ticket => {
-    if (filter === 'Todos') return true;
+    if (filter === 'All') return true;
     return ticket.category === filter;
   });
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="font-headline">Central de Suporte ao Usuário</CardTitle>
-        <CardDescription>Gerencie tickets de suporte, atribua agentes e resolva problemas dos usuários.</CardDescription>
+        <CardTitle className="font-headline">User Support Center</CardTitle>
+        <CardDescription>Manage support tickets, assign agents, and resolve user issues.</CardDescription>
       </CardHeader>
       <CardContent>
-        <Tabs defaultValue="Todos" onValueChange={setFilter} className="mb-4">
+        <Tabs defaultValue="All" onValueChange={setFilter} className="mb-4">
           <TabsList>
-            <TabsTrigger value="Todos">Todos</TabsTrigger>
-            <TabsTrigger value="Faturamento">Faturamento</TabsTrigger>
-            <TabsTrigger value="Dúvidas">Dúvidas</TabsTrigger>
-            <TabsTrigger value="Denúncias">Denúncias</TabsTrigger>
+            <TabsTrigger value="All">All</TabsTrigger>
+            <TabsTrigger value="Billing">Billing</TabsTrigger>
+            <TabsTrigger value="Questions">Questions</TabsTrigger>
+            <TabsTrigger value="Reports">Reports</TabsTrigger>
           </TabsList>
         </Tabs>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Assunto</TableHead>
-              <TableHead>Usuário</TableHead>
-              <TableHead>Categoria</TableHead>
+              <TableHead>Subject</TableHead>
+              <TableHead>User</TableHead>
+              <TableHead>Category</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Prioridade</TableHead>
-              <TableHead>Agente</TableHead>
-              <TableHead><span className="sr-only">Ações</span></TableHead>
+              <TableHead>Priority</TableHead>
+              <TableHead>Agent</TableHead>
+              <TableHead><span className="sr-only">Actions</span></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -98,9 +98,9 @@ const SupportPage = () => {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem>Ver Ticket</DropdownMenuItem>
-                        <DropdownMenuItem>Atribuir Agente</DropdownMenuItem>
-                         <DropdownMenuItem>Escalonar</DropdownMenuItem>
+                        <DropdownMenuItem>View Ticket</DropdownMenuItem>
+                        <DropdownMenuItem>Assign Agent</DropdownMenuItem>
+                         <DropdownMenuItem>Escalate</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                 </TableCell>

@@ -90,8 +90,8 @@ function AddUserSheet({ open, onOpenChange }: { open: boolean, onOpenChange: (op
       await setDoc(doc(firestore, 'users', user.uid), userProfile);
 
       toast({
-        title: 'Usuário Adicionado',
-        description: `${data.firstName} ${data.lastName} foi adicionado com sucesso.`,
+        title: 'User Added',
+        description: `${data.firstName} ${data.lastName} has been added successfully.`,
       });
       onOpenChange(false);
       form.reset();
@@ -99,8 +99,8 @@ function AddUserSheet({ open, onOpenChange }: { open: boolean, onOpenChange: (op
       console.error("Error creating user:", error);
       toast({
         variant: "destructive",
-        title: "Erro ao adicionar usuário.",
-        description: error.message || "Não foi possível criar o usuário.",
+        title: "Error adding user.",
+        description: error.message || "Could not create the user.",
       });
     }
   };
@@ -109,8 +109,8 @@ function AddUserSheet({ open, onOpenChange }: { open: boolean, onOpenChange: (op
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent>
         <SheetHeader>
-          <SheetTitle>Adicionar Novo Usuário</SheetTitle>
-          <SheetDescription>Preencha os detalhes para adicionar um novo usuário.</SheetDescription>
+          <SheetTitle>Add New User</SheetTitle>
+          <SheetDescription>Fill in the details to add a new user.</SheetDescription>
         </SheetHeader>
         <div className="p-4">
           <Form {...form}>
@@ -120,7 +120,7 @@ function AddUserSheet({ open, onOpenChange }: { open: boolean, onOpenChange: (op
                 name="firstName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Primeiro Nome</FormLabel>
+                    <FormLabel>First Name</FormLabel>
                     <FormControl>
                       <Input placeholder="John" {...field} />
                     </FormControl>
@@ -133,7 +133,7 @@ function AddUserSheet({ open, onOpenChange }: { open: boolean, onOpenChange: (op
                 name="lastName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Sobrenome</FormLabel>
+                    <FormLabel>Last Name</FormLabel>
                     <FormControl>
                       <Input placeholder="Doe" {...field} />
                     </FormControl>
@@ -159,7 +159,7 @@ function AddUserSheet({ open, onOpenChange }: { open: boolean, onOpenChange: (op
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Senha</FormLabel>
+                    <FormLabel>Password</FormLabel>
                     <FormControl>
                       <Input type="password" placeholder="••••••••" {...field} />
                     </FormControl>
@@ -169,10 +169,10 @@ function AddUserSheet({ open, onOpenChange }: { open: boolean, onOpenChange: (op
               />
                <SheetFooter className="pt-4">
                 <Button type="submit" disabled={form.formState.isSubmitting}>
-                    {form.formState.isSubmitting ? 'Adicionando...' : 'Adicionar Usuário'}
+                    {form.formState.isSubmitting ? 'Adding...' : 'Add User'}
                 </Button>
                 <SheetClose asChild>
-                  <Button variant="outline">Cancelar</Button>
+                  <Button variant="outline">Cancel</Button>
                 </SheetClose>
               </SheetFooter>
             </form>
@@ -201,7 +201,7 @@ function UsersPageContent() {
   const { data: usersData, isLoading } = useCollection<User>(usersQuery);
 
   const getTimeAgo = (date: Date | undefined) => {
-    if(!date) return 'Nunca';
+    if(!date) return 'Never';
     return `${formatDistanceToNow(date)} ago`;
   }
 
@@ -211,8 +211,8 @@ function UsersPageContent() {
         <CardHeader>
            <div className="flex flex-row items-center justify-between">
               <div>
-                  <CardTitle className="font-headline">Gerenciamento de Usuários</CardTitle>
-                  <CardDescription>Visualize, edite e gerencie perfis de usuários.</CardDescription>
+                  <CardTitle className="font-headline">User Management</CardTitle>
+                  <CardDescription>View, edit, and manage user profiles.</CardDescription>
               </div>
               <div className="flex items-center gap-2">
                   <Popover>
@@ -226,7 +226,7 @@ function UsersPageContent() {
                         )}
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
-                        {date ? format(date, "PPP") : <span>Selecione uma data</span>}
+                        {date ? format(date, "PPP") : <span>Filter by date...</span>}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="end">
@@ -240,7 +240,7 @@ function UsersPageContent() {
                   </Popover>
                   <Button size="sm" onClick={() => setIsSheetOpen(true)}>
                       <PlusCircle className="mr-2 h-4 w-4" />
-                      Adicionar Usuário
+                      Add User
                   </Button>
               </div>
           </div>
@@ -249,18 +249,18 @@ function UsersPageContent() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Usuário</TableHead>
+                <TableHead>User</TableHead>
                 <TableHead>Email</TableHead>
-                <TableHead>Último Login</TableHead>
+                <TableHead>Last Login</TableHead>
                 <TableHead>
-                  <span className="sr-only">Ações</span>
+                  <span className="sr-only">Actions</span>
                 </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading && (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center">Carregando...</TableCell>
+                  <TableCell colSpan={4} className="text-center">Loading...</TableCell>
                 </TableRow>
               )}
               {usersData?.map((user) => (
@@ -287,9 +287,9 @@ function UsersPageContent() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem>Ver Perfil</DropdownMenuItem>
-                        <DropdownMenuItem>Editar</DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive focus:text-destructive-foreground focus:bg-destructive">Excluir</DropdownMenuItem>
+                        <DropdownMenuItem>View Profile</DropdownMenuItem>
+                        <DropdownMenuItem>Edit</DropdownMenuItem>
+                        <DropdownMenuItem className="text-destructive focus:text-destructive-foreground focus:bg-destructive">Delete</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
@@ -298,7 +298,7 @@ function UsersPageContent() {
                {!isLoading && usersData?.length === 0 && (
                 <TableRow>
                     <TableCell colSpan={4} className="text-center text-muted-foreground py-10">
-                        Nenhum usuário encontrado.
+                        No users found.
                     </TableCell>
                 </TableRow>
                )}

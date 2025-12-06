@@ -67,15 +67,15 @@ function VerificationPageContent() {
     try {
       await updateDoc(therapistRef, updateData);
       toast({
-        title: 'Verificação Completa',
-        description: `O terapeuta foi ${newStatus === 'Active' ? 'aprovado' : 'rejeitado'}.`,
+        title: 'Verification Complete',
+        description: `The therapist has been ${newStatus === 'Active' ? 'approved' : 'rejected'}.`,
       });
       // The useEffect will handle selecting the next therapist
     } catch (error: any) {
       toast({
         variant: 'destructive',
-        title: 'Erro na verificação',
-        description: error.message || 'Não foi possível atualizar o status do terapeuta.',
+        title: 'Verification Error',
+        description: error.message || 'Could not update therapist status.',
       });
     } finally {
       setIsUpdating(false);
@@ -86,8 +86,8 @@ function VerificationPageContent() {
     <div className="grid md:grid-cols-3 gap-6">
       <Card className="md:col-span-1">
         <CardHeader>
-          <CardTitle className="font-headline">Fila de Verificação</CardTitle>
-          <CardDescription>{isLoadingTherapists ? 'Carregando...' : `${pendingTherapists?.length || 0} Terapeutas pendentes`}</CardDescription>
+          <CardTitle className="font-headline">Verification Queue</CardTitle>
+          <CardDescription>{isLoadingTherapists ? 'Loading...' : `${pendingTherapists?.length || 0} Therapists pending`}</CardDescription>
         </CardHeader>
         <CardContent>
            <div className="flex flex-col gap-2">
@@ -109,7 +109,7 @@ function VerificationPageContent() {
                     </Button>
                 ))}
                 {!isLoadingTherapists && pendingTherapists?.length === 0 && (
-                    <p className="text-sm text-muted-foreground text-center py-4">Nenhum terapeuta pendente.</p>
+                    <p className="text-sm text-muted-foreground text-center py-4">No pending therapists.</p>
                 )}
            </div>
         </CardContent>
@@ -121,11 +121,11 @@ function VerificationPageContent() {
               <div className="flex items-center gap-4">
                  <Button variant="outline" size="icon" className="h-7 w-7 md:hidden" onClick={() => setSelectedTherapist(null)}>
                     <ArrowLeft className="h-4 w-4" />
-                    <span className="sr-only">Voltar</span>
+                    <span className="sr-only">Back</span>
                   </Button>
                 <div>
-                    <CardTitle className="font-headline">Verificar: {selectedTherapist.full_name}</CardTitle>
-                    <CardDescription>Revise os documentos e aprove ou rejeite.</CardDescription>
+                    <CardTitle className="font-headline">Verify: {selectedTherapist.full_name}</CardTitle>
+                    <CardDescription>Review the documents and approve or reject.</CardDescription>
                 </div>
               </div>
             </CardHeader>
@@ -135,42 +135,42 @@ function VerificationPageContent() {
                     <div className="space-y-4">
                         <div className="flex items-center space-x-2">
                             <Checkbox id="id-check" checked={!!selectedTherapist.document_url} disabled />
-                            <Label htmlFor="id-check">Verificação de identidade</Label>
+                            <Label htmlFor="id-check">Identity Verification</Label>
                         </div>
                          <div className="flex items-center space-x-2">
                             <Checkbox id="license-check" checked={!!selectedTherapist.card_url} disabled />
-                            <Label htmlFor="license-check">Verificação de licença</Label>
+                            <Label htmlFor="license-check">License Verification</Label>
                         </div>
                          <div className="flex items-center space-x-2">
                             <Checkbox id="background-check" checked={!!selectedTherapist.selfie_url} disabled />
-                            <Label htmlFor="background-check">Verificação de antecedentes (Selfie)</Label>
+                            <Label htmlFor="background-check">Background Check (Selfie)</Label>
                         </div>
                          <div className="flex items-center space-x-2">
                             <Checkbox id="terms-check" checked={!!selectedTherapist.signed_term_url} disabled />
-                            <Label htmlFor="terms-check">Termo Assinado</Label>
+                            <Label htmlFor="terms-check">Signed Term</Label>
                         </div>
                     </div>
                      <div className="mt-6 flex gap-2">
                         <Button onClick={() => handleVerification(selectedTherapist.id, 'Active')} disabled={isUpdating}>
                           {isUpdating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Check className="mr-2 h-4 w-4" />}
-                           Aprovar
+                           Approve
                         </Button>
                         <Button variant="destructive" onClick={() => handleVerification(selectedTherapist.id, 'Rejected')} disabled={isUpdating}>
                            {isUpdating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <X className="mr-2 h-4 w-4" />}
-                           Rejeitar
+                           Reject
                         </Button>
                     </div>
                 </div>
                 <div>
-                    <h3 className="font-semibold mb-4">Visualizador de Documentos</h3>
+                    <h3 className="font-semibold mb-4">Document Viewer</h3>
                     <Card className="h-[400px]">
                         <CardHeader className="flex flex-row items-center justify-between p-2 border-b">
-                            <p className="text-sm font-medium">licenca_massagem.pdf</p>
+                            <p className="text-sm font-medium">massage_license.pdf</p>
                             <FileText className="w-4 h-4 text-muted-foreground" />
                         </CardHeader>
                         <ScrollArea className="h-[340px]">
                             <CardContent className="p-4">
-                               <p className="text-sm text-center text-muted-foreground py-20">Visualizador de PDF em breve.</p>
+                               <p className="text-sm text-center text-muted-foreground py-20">PDF viewer coming soon.</p>
                             </CardContent>
                         </ScrollArea>
                     </Card>
@@ -179,7 +179,7 @@ function VerificationPageContent() {
           </>
         ) : (
            <CardContent className="flex items-center justify-center h-full min-h-[500px]">
-                <p className="text-muted-foreground">Selecione um terapeuta para iniciar a verificação.</p>
+                <p className="text-muted-foreground">Select a therapist to start verification.</p>
            </CardContent>
         )}
       </Card>

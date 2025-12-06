@@ -77,7 +77,7 @@ function TherapistProfilePageContent() {
     }
 
     if (!therapist) {
-        return <p>Terapeuta não encontrado.</p>;
+        return <p>Therapist not found.</p>;
     }
 
     return (
@@ -85,7 +85,7 @@ function TherapistProfilePageContent() {
              <Button variant="outline" asChild>
                 <Link href="/therapists">
                     <ArrowLeft className="mr-2 h-4 w-4" />
-                    Voltar para Terapeutas
+                    Back to Therapists
                 </Link>
             </Button>
             <Card>
@@ -104,19 +104,19 @@ function TherapistProfilePageContent() {
                 <CardContent>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
                         <div className="p-4 bg-muted rounded-lg">
-                            <p className="text-muted-foreground">Status do Perfil</p>
+                            <p className="text-muted-foreground">Profile Status</p>
                             <p className="font-semibold"><Badge variant={statusVariantMap[therapist.status]}>{therapist.status}</Badge></p>
                         </div>
                         <div className="p-4 bg-muted rounded-lg">
-                            <p className="text-muted-foreground">Plano</p>
+                            <p className="text-muted-foreground">Plan</p>
                             <p className="font-semibold">{therapist.plan_name}</p>
                         </div>
                         <div className="p-4 bg-muted rounded-lg">
-                            <p className="text-muted-foreground">Status da Assinatura</p>
+                            <p className="text-muted-foreground">Subscription Status</p>
                             <p className="font-semibold"><Badge variant={subscriptionStatusVariantMap[therapist.subscription_status]}>{therapist.subscription_status}</Badge></p>
                         </div>
                         <div className="p-4 bg-muted rounded-lg">
-                            <p className="text-muted-foreground">Última Atividade</p>
+                            <p className="text-muted-foreground">Last Activity</p>
                             <p className="font-semibold">{therapist.updated_at ? therapist.updated_at.toDate().toLocaleDateString() : 'N/A'}</p>
                         </div>
                     </div>

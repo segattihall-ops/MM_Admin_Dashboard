@@ -37,17 +37,17 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
   const menuItems = [
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/users', label: 'Users', icon: Users },
-    { href: '/therapists', label: 'Terapeutas', icon: HeartHandshake },
-    { href: '/verification', label: 'Verificação', icon: ShieldCheck },
+    { href: '/therapists', label: 'Therapists', icon: HeartHandshake },
+    { href: '/verification', label: 'Verification', icon: ShieldCheck },
     { href: '/billing', label: 'Billing', icon: Receipt },
     { href: '/content', label: 'Content', icon: FileText },
     { href: '/subscriptions', label: 'Subscriptions', icon: CreditCard },
     { href: '/seo', label: 'SEO', icon: BarChart },
     { href: '/legal', label: 'Legal', icon: Gavel },
     { href: '/logs', label: 'Logs', icon: FileClock },
-    { href: '/moderation', label: 'Moderação', icon: ScanEye },
-    { href: '/support', label: 'Suporte', icon: LifeBuoy },
-    { href: '/settings', label: 'Configurações', icon: Settings },
+    { href: '/moderation', label: 'Moderation', icon: ScanEye },
+    { href: '/support', label: 'Support', icon: LifeBuoy },
+    { href: '/settings', label: 'Settings', icon: Settings },
   ];
 
   return (

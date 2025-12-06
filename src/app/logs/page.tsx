@@ -26,19 +26,19 @@ const LogsPage = () => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="font-headline">Logs e Monitoramento do Sistema</CardTitle>
-        <CardDescription>Monitore logs do sistema em tempo real e filtre por serviço ou nível.</CardDescription>
+        <CardTitle className="font-headline">System Logs & Monitoring</CardTitle>
+        <CardDescription>Monitor system logs in real-time and filter by service or level.</CardDescription>
         <div className="flex items-center gap-2 pt-4">
             <div className="relative flex-1">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Buscar logs..." className="pl-8" />
+              <Input placeholder="Search logs..." className="pl-8" />
             </div>
             <Select>
                 <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Nível" />
+                    <SelectValue placeholder="Level" />
                 </SelectTrigger>
                 <SelectContent>
-                    <SelectItem value="all">Todos os Níveis</SelectItem>
+                    <SelectItem value="all">All Levels</SelectItem>
                     <SelectItem value="error">Error</SelectItem>
                     <SelectItem value="warn">Warning</SelectItem>
                     <SelectItem value="info">Info</SelectItem>
@@ -47,10 +47,10 @@ const LogsPage = () => {
             </Select>
              <Select>
                 <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Serviço" />
+                    <SelectValue placeholder="Service" />
                 </SelectTrigger>
                 <SelectContent>
-                    <SelectItem value="all">Todos os Serviços</SelectItem>
+                    <SelectItem value="all">All Services</SelectItem>
                     <SelectItem value="api">API</SelectItem>
                     <SelectItem value="auth">Auth</SelectItem>
                     <SelectItem value="billing">Billing</SelectItem>
@@ -63,9 +63,9 @@ const LogsPage = () => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[100px]">Nível</TableHead>
-              <TableHead>Mensagem</TableHead>
-              <TableHead className="w-[180px]">Serviço</TableHead>
+              <TableHead className="w-[100px]">Level</TableHead>
+              <TableHead>Message</TableHead>
+              <TableHead className="w-[180px]">Service</TableHead>
               <TableHead className="w-[200px]">Timestamp</TableHead>
             </TableRow>
           </TableHeader>
@@ -82,7 +82,7 @@ const LogsPage = () => {
             )) : (
               <TableRow>
                 <TableCell colSpan={4} className="text-center text-muted-foreground py-10">
-                  Nenhum log para exibir. Os logs do sistema aparecerão aqui.
+                  No logs to display. System logs will appear here.
                 </TableCell>
               </TableRow>
             )}

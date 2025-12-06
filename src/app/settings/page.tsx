@@ -12,85 +12,85 @@ const SettingsPage = () => {
   return (
     <Tabs defaultValue="apiKeys">
         <CardHeader className="px-0">
-            <CardTitle className="font-headline">Configurações Gerais</CardTitle>
-            <CardDescription>Gerencie as configurações mestre da sua aplicação.</CardDescription>
+            <CardTitle className="font-headline">General Settings</CardTitle>
+            <CardDescription>Manage the master settings for your application.</CardDescription>
         </CardHeader>
         <TabsList className="mb-4">
-            <TabsTrigger value="apiKeys"><KeyRound className="w-4 h-4 mr-2"/> Chaves de API</TabsTrigger>
-            <TabsTrigger value="notifications"><Bell className="w-4 h-4 mr-2"/> Notificações</TabsTrigger>
-            <TabsTrigger value="permissions"><Shield className="w-4 h-4 mr-2"/> Permissões</TabsTrigger>
+            <TabsTrigger value="apiKeys"><KeyRound className="w-4 h-4 mr-2"/> API Keys</TabsTrigger>
+            <TabsTrigger value="notifications"><Bell className="w-4 h-4 mr-2"/> Notifications</TabsTrigger>
+            <TabsTrigger value="permissions"><Shield className="w-4 h-4 mr-2"/> Permissions</TabsTrigger>
         </TabsList>
         <TabsContent value="apiKeys">
             <Card>
                 <CardHeader>
-                    <CardTitle>Chaves de API</CardTitle>
-                    <CardDescription>Gerencie chaves de API para serviços de terceiros.</CardDescription>
+                    <CardTitle>API Keys</CardTitle>
+                    <CardDescription>Manage API keys for third-party services.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                     <Alert>
                         <Info className="h-4 w-4" />
-                        <AlertTitle>Gerenciamento de Chaves</AlertTitle>
+                        <AlertTitle>Key Management</AlertTitle>
                         <AlertDescription>
-                            Suas chaves secretas são armazenadas de forma segura no servidor. Insira-as aqui para habilitar as integrações. As chaves publicáveis são seguras para serem usadas no cliente.
+                            Your secret keys are securely stored on the server. Enter them here to enable integrations. Publishable keys are safe to use on the client.
                         </AlertDescription>
                     </Alert>
                     <div className="space-y-2">
-                        <Label htmlFor="stripe-publishable-key">Chave Publicável do Stripe</Label>
+                        <Label htmlFor="stripe-publishable-key">Stripe Publishable Key</Label>
                         <Input id="stripe-publishable-key" placeholder="pk_test_..." />
                     </div>
                      <div className="space-y-2">
-                        <Label htmlFor="stripe-secret-key">Chave Secreta do Stripe</Label>
+                        <Label htmlFor="stripe-secret-key">Stripe Secret Key</Label>
                         <Input id="stripe-secret-key" type="password" placeholder="sk_test_..." />
                     </div>
                     <div className="space-y-2">
-                        <Label htmlFor="google-maps-key">Chave de API do Google Maps</Label>
+                        <Label htmlFor="google-maps-key">Google Maps API Key</Label>
                         <Input id="google-maps-key" placeholder="AIza..." />
                     </div>
                 </CardContent>
                 <CardFooter>
-                    <Button><Save className="mr-2 h-4 w-4"/> Salvar Chaves</Button>
+                    <Button><Save className="mr-2 h-4 w-4"/> Save Keys</Button>
                 </CardFooter>
             </Card>
         </TabsContent>
         <TabsContent value="notifications">
              <Card>
                 <CardHeader>
-                    <CardTitle>Configurações de Notificação</CardTitle>
-                    <CardDescription>Configure como os administradores recebem alertas.</CardDescription>
+                    <CardTitle>Notification Settings</CardTitle>
+                    <CardDescription>Configure how admins receive alerts.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="flex items-center justify-between rounded-lg border p-4">
                         <div className="space-y-0.5">
-                            <Label htmlFor="new-user-email">Email para Novo Usuário</Label>
+                            <Label htmlFor="new-user-email">New User Email</Label>
                             <p className="text-xs text-muted-foreground">
-                                Enviar um email quando um novo usuário se cadastra.
+                                Send an email when a new user signs up.
                             </p>
                         </div>
                         <Switch id="new-user-email" defaultChecked/>
                     </div>
                      <div className="flex items-center justify-between rounded-lg border p-4">
                         <div className="space-y-0.5">
-                            <Label htmlFor="payment-failed-slack">Alerta do Slack para Falha de Pagamento</Label>
+                            <Label htmlFor="payment-failed-slack">Payment Failure Slack Alert</Label>
                              <p className="text-xs text-muted-foreground">
-                                Publicar no canal #billing quando um pagamento falha.
+                                Post to #billing channel when a payment fails.
                             </p>
                         </div>
                         <Switch id="payment-failed-slack"/>
                     </div>
                 </CardContent>
                  <CardFooter>
-                    <Button><Save className="mr-2 h-4 w-4"/> Salvar Preferências</Button>
+                    <Button><Save className="mr-2 h-4 w-4"/> Save Preferences</Button>
                 </CardFooter>
             </Card>
         </TabsContent>
         <TabsContent value="permissions">
              <Card>
                 <CardHeader>
-                    <CardTitle>Permissões de Função</CardTitle>
-                    <CardDescription>Defina o que cada função de usuário pode acessar e fazer.</CardDescription>
+                    <CardTitle>Role Permissions</CardTitle>
+                    <CardDescription>Define what each user role can access and do.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <p className="text-center text-muted-foreground py-10">Gerenciamento de permissões em breve.</p>
+                    <p className="text-center text-muted-foreground py-10">Permission management coming soon.</p>
                 </CardContent>
             </Card>
         </TabsContent>

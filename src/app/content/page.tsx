@@ -80,7 +80,7 @@ function ContentPageBody() {
                     <TableBody>
                         {isLoading && (
                           <TableRow>
-                            <TableCell colSpan={5} className="text-center">Carregando...</TableCell>
+                            <TableCell colSpan={5} className="text-center">Loading...</TableCell>
                           </TableRow>
                         )}
                         {!isLoading && articlesData?.map((article) => (
@@ -113,7 +113,7 @@ function ContentPageBody() {
                          {!isLoading && articlesData?.length === 0 && (
                             <TableRow>
                                 <TableCell colSpan={5} className="text-center text-muted-foreground py-10">
-                                    Nenhum artigo encontrado.
+                                    No articles found.
                                 </TableCell>
                             </TableRow>
                         )}

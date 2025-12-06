@@ -13,9 +13,9 @@ import { Badge } from '@/components/ui/badge';
 import { PlusCircle, Upload, Eye } from 'lucide-react';
 
 const legalDocs = [
-  { id: 'tos-v2.1', name: 'Termos de Serviço', version: 'v2.1', status: 'Published', lastUpdated: '2024-06-15' },
-  { id: 'privacy-v1.5', name: 'Política de Privacidade', version: 'v1.5', status: 'Published', lastUpdated: '2024-06-15' },
-  { id: 'tos-v2.2-draft', name: 'Termos de Serviço', version: 'v2.2', status: 'Draft', lastUpdated: '2024-07-20' },
+  { id: 'tos-v2.1', name: 'Terms of Service', version: 'v2.1', status: 'Published', lastUpdated: '2024-06-15' },
+  { id: 'privacy-v1.5', name: 'Privacy Policy', version: 'v1.5', status: 'Published', lastUpdated: '2024-06-15' },
+  { id: 'tos-v2.2-draft', name: 'Terms of Service', version: 'v2.2', status: 'Draft', lastUpdated: '2024-07-20' },
 ];
 
 const LegalPage = () => {
@@ -24,12 +24,12 @@ const LegalPage = () => {
         <CardHeader>
              <div className="flex justify-between items-center">
                 <div>
-                    <CardTitle className="font-headline">Versionamento Legal</CardTitle>
-                    <CardDescription>Gerencie e publique seus documentos legais.</CardDescription>
+                    <CardTitle className="font-headline">Legal Versioning</CardTitle>
+                    <CardDescription>Manage and publish your legal documents.</CardDescription>
                 </div>
                 <Button size="sm">
                   <Upload className="mr-2 h-4 w-4" />
-                  Carregar Nova Versão
+                  Upload New Version
                 </Button>
             </div>
         </CardHeader>
@@ -37,11 +37,11 @@ const LegalPage = () => {
              <Table>
                 <TableHeader>
                     <TableRow>
-                        <TableHead>Documento</TableHead>
-                        <TableHead>Versão</TableHead>
+                        <TableHead>Document</TableHead>
+                        <TableHead>Version</TableHead>
                         <TableHead>Status</TableHead>
-                        <TableHead>Última Atualização</TableHead>
-                        <TableHead>Ações</TableHead>
+                        <TableHead>Last Updated</TableHead>
+                        <TableHead>Actions</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -54,8 +54,8 @@ const LegalPage = () => {
                             </TableCell>
                             <TableCell>{doc.lastUpdated}</TableCell>
                             <TableCell className="flex gap-2">
-                                <Button variant="outline" size="sm"><Eye className="mr-2 h-4 w-4" /> Visualizar</Button>
-                                {doc.status === 'Draft' && <Button size="sm">Publicar</Button>}
+                                <Button variant="outline" size="sm"><Eye className="mr-2 h-4 w-4" /> View</Button>
+                                {doc.status === 'Draft' && <Button size="sm">Publish</Button>}
                             </TableCell>
                         </TableRow>
                     ))}

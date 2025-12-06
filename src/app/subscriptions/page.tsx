@@ -93,7 +93,7 @@ function SubscriptionsPageContent() {
           <TableBody>
              {isLoading && (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center">Carregando...</TableCell>
+                  <TableCell colSpan={6} className="text-center">Loading...</TableCell>
                 </TableRow>
               )}
             {subscriptionsData?.map((sub) => {
@@ -132,7 +132,7 @@ function SubscriptionsPageContent() {
              {!isLoading && subscriptionsData?.length === 0 && (
                 <TableRow>
                     <TableCell colSpan={6} className="text-center text-muted-foreground py-10">
-                        Nenhuma assinatura encontrada.
+                        No subscriptions found.
                     </TableCell>
                 </TableRow>
                )}

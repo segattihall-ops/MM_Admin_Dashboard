@@ -80,7 +80,7 @@ function SubscriptionsTable() {
           <TableBody>
              {isLoading && (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center">Carregando...</TableCell>
+                  <TableCell colSpan={6} className="text-center">Loading...</TableCell>
                 </TableRow>
               )}
             {subscriptionsData?.map((sub) => {
@@ -119,7 +119,7 @@ function SubscriptionsTable() {
              {!isLoading && subscriptionsData?.length === 0 && (
                 <TableRow>
                     <TableCell colSpan={6} className="text-center text-muted-foreground py-10">
-                        Nenhuma assinatura encontrada.
+                        No subscriptions found.
                     </TableCell>
                 </TableRow>
                )}
@@ -133,23 +133,23 @@ const BillingPageContent = () => {
     <>
     <Alert className="mb-6">
         <Terminal className="h-4 w-4" />
-        <AlertTitle>Modo de Desenvolvimento</AlertTitle>
+        <AlertTitle>Development Mode</AlertTitle>
         <AlertDescription>
-          Esta página está usando dados de exemplo. Para conectar sua conta do Stripe, insira suas chaves de API na <Button variant="link" className="p-0 h-auto"><a href="/settings">página de configurações</a></Button>.
+          This page is using sample data. To connect your Stripe account, enter your API keys on the <Button variant="link" className="p-0 h-auto"><a href="/settings">settings page</a></Button>.
         </AlertDescription>
       </Alert>
     <Tabs defaultValue="overview">
         <TabsList className="mb-4">
-            <TabsTrigger value="overview">Visão Geral</TabsTrigger>
-            <TabsTrigger value="subscriptions">Assinaturas</TabsTrigger>
-            <TabsTrigger value="logs">Logs de Eventos</TabsTrigger>
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="subscriptions">Subscriptions</TabsTrigger>
+            <TabsTrigger value="logs">Event Logs</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview">
              <div className="grid gap-6 md:grid-cols-2">
                 <Card>
                     <CardHeader>
-                        <CardTitle className="font-headline">Receita (Últimos 6 meses)</CardTitle>
+                        <CardTitle className="font-headline">Revenue (Last 6 months)</CardTitle>
                     </CardHeader>
                     <CardContent>
                          {revenueData.length > 0 ? (
@@ -164,14 +164,14 @@ const BillingPageContent = () => {
                             </ChartContainer>
                          ) : (
                             <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                                Dados de receita aparecerão aqui.
+                                Revenue data will appear here.
                             </div>
                          )}
                     </CardContent>
                 </Card>
                  <Card>
                     <CardHeader>
-                        <CardTitle className="font-headline">Novas Assinaturas</CardTitle>
+                        <CardTitle className="font-headline">New Subscriptions</CardTitle>
                     </CardHeader>
                     <CardContent>
                         {subscriptionsChartData.length > 0 ? (
@@ -186,7 +186,7 @@ const BillingPageContent = () => {
                             </ChartContainer>
                         ) : (
                             <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                                Dados de novas assinaturas aparecerão aqui.
+                                New subscription data will appear here.
                             </div>
                         )}
                     </CardContent>
@@ -197,8 +197,8 @@ const BillingPageContent = () => {
         <TabsContent value="subscriptions">
             <Card>
                 <CardHeader>
-                    <CardTitle className="font-headline">Gerenciamento de Assinaturas</CardTitle>
-                    <CardDescription>Visão geral de todas as assinaturas ativas e passadas.</CardDescription>
+                    <CardTitle className="font-headline">Subscription Management</CardTitle>
+                    <CardDescription>Overview of all active and past subscriptions.</CardDescription>
                 </CardHeader>
                 <CardContent>
                    <SubscriptionsTable />
@@ -209,11 +209,11 @@ const BillingPageContent = () => {
         <TabsContent value="logs">
             <Card>
                 <CardHeader>
-                    <CardTitle className="font-headline">Logs de Eventos do Stripe</CardTitle>
-                    <CardDescription>Monitore todos os eventos de webhook do Stripe.</CardDescription>
+                    <CardTitle className="font-headline">Stripe Event Logs</CardTitle>
+                    <CardDescription>Monitor all webhook events from Stripe.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                   <p className="text-center text-muted-foreground py-10">Os logs de eventos do Stripe aparecerão aqui após a configuração.</p>
+                   <p className="text-center text-muted-foreground py-10">Stripe event logs will appear here after setup.</p>
                 </CardContent>
             </Card>
         </TabsContent>

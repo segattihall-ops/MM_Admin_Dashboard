@@ -103,7 +103,7 @@ const DashboardPageContent = () => {
           </CardHeader>
           <CardContent className="pl-2">
              <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                Dados de atividade do usuário aparecerão aqui.
+                User activity data will appear here.
              </div>
           </CardContent>
         </Card>
@@ -136,7 +136,7 @@ const DashboardPageContent = () => {
               ))}
                {!isLoadingArticles && recentArticles?.length === 0 && (
                  <div className="text-center text-muted-foreground py-10">
-                    Nenhuma atividade recente.
+                    No recent activity.
                  </div>
                 )}
             </div>

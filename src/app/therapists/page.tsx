@@ -74,7 +74,7 @@ const editTherapistSchema = z.object({
 });
 
 type EditTherapistForm = z.infer<typeof editTherapistSchema>;
-type Therapist = {
+export type Therapist = {
     id: string;
     user_id: string;
     full_name: string;
@@ -125,8 +125,8 @@ function AddTherapistSheet({ open, onOpenChange }: { open: boolean, onOpenChange
       await setDoc(doc(firestore, 'therapists', user.uid), therapistProfile);
 
       toast({
-        title: 'Terapeuta Adicionado',
-        description: `${data.fullName} foi adicionado com sucesso.`,
+        title: 'Therapist Added',
+        description: `${data.fullName} has been added successfully.`,
       });
       onOpenChange(false);
       form.reset();
@@ -134,8 +134,8 @@ function AddTherapistSheet({ open, onOpenChange }: { open: boolean, onOpenChange
       console.error("Error creating therapist:", error);
       toast({
         variant: "destructive",
-        title: "Erro ao adicionar terapeuta.",
-        description: error.message || "Não foi possível criar o terapeuta.",
+        title: "Error adding therapist.",
+        description: error.message || "Could not create the therapist.",
       });
     }
   };
@@ -144,8 +144,8 @@ function AddTherapistSheet({ open, onOpenChange }: { open: boolean, onOpenChange
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent>
         <SheetHeader>
-          <SheetTitle>Adicionar Novo Terapeuta</SheetTitle>
-          <SheetDescription>Preencha os detalhes para adicionar um novo terapeuta.</SheetDescription>
+          <SheetTitle>Add New Therapist</SheetTitle>
+          <SheetDescription>Fill in the details to add a new therapist.</SheetDescription>
         </SheetHeader>
         <div className="p-4">
           <Form {...form}>
@@ -155,7 +155,7 @@ function AddTherapistSheet({ open, onOpenChange }: { open: boolean, onOpenChange
                 name="fullName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Nome Completo</FormLabel>
+                    <FormLabel>Full Name</FormLabel>
                     <FormControl>
                       <Input placeholder="John Doe" {...field} />
                     </FormControl>
@@ -181,7 +181,7 @@ function AddTherapistSheet({ open, onOpenChange }: { open: boolean, onOpenChange
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Senha</FormLabel>
+                    <FormLabel>Password</FormLabel>
                     <FormControl>
                       <Input type="password" placeholder="••••••••" {...field} />
                     </FormControl>
@@ -191,10 +191,10 @@ function AddTherapistSheet({ open, onOpenChange }: { open: boolean, onOpenChange
               />
                <SheetFooter className="pt-4">
                  <SheetClose asChild>
-                  <Button variant="outline">Cancelar</Button>
+                  <Button variant="outline">Cancel</Button>
                 </SheetClose>
                 <Button type="submit" disabled={form.formState.isSubmitting}>
-                    {form.formState.isSubmitting ? 'Adicionando...' : 'Adicionar Terapeuta'}
+                    {form.formState.isSubmitting ? 'Adding...' : 'Add Therapist'}
                 </Button>
               </SheetFooter>
             </form>
@@ -236,16 +236,16 @@ function EditTherapistSheet({ open, onOpenChange, therapist }: { open: boolean, 
       });
 
       toast({
-        title: 'Terapeuta Atualizado',
-        description: 'As informações do terapeuta foram atualizadas com sucesso.',
+        title: 'Therapist Updated',
+        description: 'The therapist\'s information has been updated successfully.',
       });
       onOpenChange(false);
     } catch (error: any) {
       console.error("Error updating therapist:", error);
       toast({
         variant: "destructive",
-        title: "Erro ao atualizar.",
-        description: error.message || "Não foi possível atualizar o terapeuta.",
+        title: "Update Error.",
+        description: error.message || "Could not update the therapist.",
       });
     }
   };
@@ -254,13 +254,13 @@ function EditTherapistSheet({ open, onOpenChange, therapist }: { open: boolean, 
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="sm:max-w-md">
         <SheetHeader>
-          <SheetTitle>Editar Terapeuta</SheetTitle>
-          <SheetDescription>Atualize os detalhes do terapeuta.</SheetDescription>
+          <SheetTitle>Edit Therapist</SheetTitle>
+          <SheetDescription>Update the therapist's details.</SheetDescription>
         </SheetHeader>
         <div className="p-4">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField control={form.control} name="fullName" render={({ field }) => (<FormItem><FormLabel>Nome Completo</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+              <FormField control={form.control} name="fullName" render={({ field }) => (<FormItem><FormLabel>Full Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
               <FormField control={form.control} name="email" render={({ field }) => (<FormItem><FormLabel>Email</FormLabel><FormControl><Input type="email" {...field} /></FormControl><FormMessage /></FormItem>)} />
               <FormField control={form.control} name="status" render={({ field }) => (
                 <FormItem>
@@ -272,24 +272,24 @@ function EditTherapistSheet({ open, onOpenChange, therapist }: { open: boolean, 
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="Active">Ativo</SelectItem>
-                      <SelectItem value="Pending">Pendente</SelectItem>
-                      <SelectItem value="Inactive">Inativo</SelectItem>
+                      <SelectItem value="Active">Active</SelectItem>
+                      <SelectItem value="Pending">Pending</SelectItem>
+                      <SelectItem value="Inactive">Inactive</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
                 </FormItem>
               )} />
-              <FormField control={form.control} name="plan" render={({ field }) => (<FormItem><FormLabel>Plano (ID)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
-              <FormField control={form.control} name="planName" render={({ field }) => (<FormItem><FormLabel>Nome do Plano</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
-              <FormField control={form.control} name="subscriptionStatus" render={({ field }) => (<FormItem><FormLabel>Status da Assinatura</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+              <FormField control={form.control} name="plan" render={({ field }) => (<FormItem><FormLabel>Plan (ID)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+              <FormField control={form.control} name="planName" render={({ field }) => (<FormItem><FormLabel>Plan Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+              <FormField control={form.control} name="subscriptionStatus" render={({ field }) => (<FormItem><FormLabel>Subscription Status</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
 
               <SheetFooter className="pt-4">
                  <SheetClose asChild>
-                  <Button variant="outline">Cancelar</Button>
+                  <Button variant="outline">Cancel</Button>
                 </SheetClose>
                 <Button type="submit" disabled={form.formState.isSubmitting}>
-                  {form.formState.isSubmitting ? 'Salvando...' : 'Salvar Alterações'}
+                  {form.formState.isSubmitting ? 'Saving...' : 'Save Changes'}
                 </Button>
               </SheetFooter>
             </form>
@@ -323,15 +323,15 @@ function TherapistsPageContent() {
     try {
       await deleteDoc(doc(firestore, 'therapists', therapistId));
       toast({
-        title: 'Terapeuta Excluído',
-        description: 'O terapeuta foi removido com sucesso.',
+        title: 'Therapist Deleted',
+        description: 'The therapist was removed successfully.',
       });
     } catch (error: any) {
       console.error("Error deleting therapist:", error);
       toast({
         variant: "destructive",
-        title: "Erro ao excluir.",
-        description: error.message || "Não foi possível remover o terapeuta.",
+        title: "Deletion Error.",
+        description: error.message || "Could not remove the therapist.",
       });
     }
   };
@@ -383,19 +383,19 @@ function TherapistsPageContent() {
         <CardHeader>
           <div className="flex justify-between items-center">
             <div>
-              <CardTitle className="font-headline">Gestão de Terapeutas</CardTitle>
-              <CardDescription>Gerencie perfis, status e informações de terapeutas.</CardDescription>
+              <CardTitle className="font-headline">Therapist Management</CardTitle>
+              <CardDescription>Manage therapist profiles, statuses, and information.</CardDescription>
             </div>
             <Button size="sm" onClick={() => setIsAddSheetOpen(true)}>
               <PlusCircle className="mr-2 h-4 w-4" />
-              Adicionar Terapeuta
+              Add Therapist
             </Button>
           </div>
           <div className="flex items-center gap-2 pt-4">
             <div className="relative flex-1">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input 
-                placeholder="Buscar terapeutas..." 
+                placeholder="Search therapists..." 
                 className="pl-8" 
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -408,7 +408,7 @@ function TherapistsPageContent() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
-                <DropdownMenuItem onClick={() => setStatusFilter('All')}>Todos</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setStatusFilter('All')}>All</DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setStatusFilter('Active')}>Active</DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setStatusFilter('Pending')}>Pending</DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setStatusFilter('Inactive')}>Inactive</DropdownMenuItem>
@@ -416,7 +416,7 @@ function TherapistsPageContent() {
             </DropdownMenu>
             <Button variant="outline" onClick={handleExport}>
               <File className="mr-2 h-4 w-4" />
-              Exportar
+              Export
             </Button>
           </div>
         </CardHeader>
@@ -424,17 +424,17 @@ function TherapistsPageContent() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Nome</TableHead>
+                <TableHead>Name</TableHead>
                 <TableHead>Email</TableHead>
-                <TableHead>Plano</TableHead>
+                <TableHead>Plan</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead><span className="sr-only">Ações</span></TableHead>
+                <TableHead><span className="sr-only">Actions</span></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading && (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center">Carregando...</TableCell>
+                  <TableCell colSpan={5} className="text-center">Loading...</TableCell>
                 </TableRow>
               )}
               {filteredTherapists?.map((therapist) => (
@@ -457,27 +457,27 @@ function TherapistsPageContent() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem onClick={() => router.push(`/therapists/${therapist.id}`)}>
-                            <User className="mr-2 h-4 w-4" /> Ver Perfil
+                            <User className="mr-2 h-4 w-4" /> View Profile
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleEdit(therapist)}>
-                            <Edit className="mr-2 h-4 w-4" /> Editar
+                            <Edit className="mr-2 h-4 w-4" /> Edit
                         </DropdownMenuItem>
                          <AlertDialog>
                             <AlertDialogTrigger asChild>
                                <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive focus:text-destructive-foreground focus:bg-destructive">
-                                    <Trash2 className="mr-2 h-4 w-4" /> Excluir
+                                    <Trash2 className="mr-2 h-4 w-4" /> Delete
                                 </DropdownMenuItem>
                             </AlertDialogTrigger>
                             <AlertDialogContent>
                                 <AlertDialogHeader>
-                                <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+                                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                                 <AlertDialogDescription>
-                                    Essa ação não pode ser desfeita. Isso excluirá permanentemente a conta do terapeuta.
+                                    This action cannot be undone. This will permanently delete the therapist's account.
                                 </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
-                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => handleDelete(therapist.id)} className="bg-destructive hover:bg-destructive/90">Excluir</AlertDialogAction>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleDelete(therapist.id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
                                 </AlertDialogFooter>
                             </AlertDialogContent>
                         </AlertDialog>
