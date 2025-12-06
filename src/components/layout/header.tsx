@@ -10,7 +10,7 @@ import Link from 'next/link';
 
 const AppHeader = () => {
   return (
-    <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background/80 backdrop-blur-sm px-4 lg:h-[60px] lg:px-6">
+    <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background/60 backdrop-blur-lg px-4 lg:h-[60px] lg:px-6">
       <div className="flex items-center gap-2">
         <SidebarTrigger className="md:hidden" />
         <Link href="/dashboard" className="md:hidden flex items-center gap-2">
@@ -36,7 +36,7 @@ const AppHeader = () => {
             <Input
                 type="search"
                 placeholder="Search..."
-                className="pl-8 w-[200px] lg:w-[300px] bg-card border-none focus-visible:ring-primary"
+                className="pl-8 w-[200px] lg:w-[300px] bg-card/80 border-none focus-visible:ring-primary"
             />
         </div>
         <DropdownMenu>
