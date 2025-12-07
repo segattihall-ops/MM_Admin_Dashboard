@@ -2,17 +2,21 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import MainLayout from "@/components/layout/main-layout";
+import { getAdminContext } from "@/lib/auth/server";
 
 export const metadata: Metadata = {
   title: "MasseurMatch Admin",
   description: "Admin dashboard for managing your application.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const adminContext = await getAdminContext();
+  const adminEmail = 'user' in adminContext && adminContext.user ? adminContext.user.email ?? undefined : undefined;
+
   return (
     <html lang="en" className="dark" style={{ colorScheme: "dark" }}>
       <head>
@@ -28,7 +32,7 @@ export default function RootLayout({
         />
       </head>
       <body className="font-body antialiased">
-        <MainLayout>{children}</MainLayout>
+        <MainLayout adminEmail={adminEmail}>{children}</MainLayout>
         <Toaster />
       </body>
     </html>

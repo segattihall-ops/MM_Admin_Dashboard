@@ -1,275 +1,68 @@
-'use client';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { MoreHorizontal, PlusCircle, File, Search, ChevronDown, User, Edit, UserX } from 'lucide-react';
+import Link from 'next/link';
+import { listTherapists } from '@/lib/supabase/crud';
+import { PageHeader } from '@/components/layout/page-header';
+import { DataTable } from '@/components/common/data-table';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { useState, useMemo } from 'react';
-import { FirebaseClientProvider, useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking, FirestorePermissionError, errorEmitter } from '@/firebase';
-import { doc, collection, serverTimestamp, updateDoc } from 'firebase/firestore';
-import { useToast } from '@/hooks/use-toast';
-import { useRouter } from 'next/navigation';
-import { AddTherapistSheet } from './AddTherapistSheet';
-import { EditTherapistSheet } from './EditTherapistSheet';
 
-const statusVariantMap: { [key: string]: 'default' | 'secondary' | 'destructive' } = {
-  'Active': 'default',
-  'Pending': 'secondary',
-  'Inactive': 'destructive',
-};
+const PAGE_SIZE = 20;
 
-export type Therapist = {
-    id: string;
-    user_id: string;
-    full_name: string;
-    email: string;
-    slug?: string;
-    phone?: string;
-    status: 'Active' | 'Pending' | 'Inactive';
-    plan: string;
-    plan_name: string;
-    subscription_status: string;
-    created_at: any;
-    updated_at: any;
-};
+export default async function TherapistsPage({ searchParams }: { searchParams?: { page?: string } }) {
+  const page = Math.max(parseInt(searchParams?.page ?? '1', 10) || 1, 1);
+  const { data, error, count } = await listTherapists(page, PAGE_SIZE);
+  if (error) {
+    return <div className="text-destructive">Failed to load therapists: {error.message}</div>;
+  }
 
-function TherapistsPageContent() {
-  const router = useRouter();
-  const firestore = useFirestore();
-  const therapistsQuery = useMemoFirebase(() => firestore ? collection(firestore, 'therapists') : null, [firestore]);
-  const { data: therapists, isLoading } = useCollection<Therapist>(therapistsQuery);
-  const { toast } = useToast();
-  
-  const [isAddSheetOpen, setIsAddSheetOpen] = useState(false);
-  const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
-  const [selectedTherapist, setSelectedTherapist] = useState<Therapist | null>(null);
-  const [therapistToDeactivate, setTherapistToDeactivate] = useState<Therapist | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('All');
-
-  const handleEdit = (therapist: Therapist) => {
-    setSelectedTherapist(therapist);
-    setIsEditSheetOpen(true);
-  };
-  
-  const handleDeactivate = (therapist: Therapist) => {
-    if (!firestore) return;
-    const docRef = doc(firestore, 'therapists', therapist.id);
-    const updateData = { status: 'Inactive', updatedAt: serverTimestamp() };
-    
-    updateDoc(docRef, updateData)
-      .then(() => {
-        toast({
-          title: 'Therapist Deactivated',
-          description: `${therapist.full_name} has been deactivated.`,
-        });
-      })
-      .catch(error => {
-         const permissionError = new FirestorePermissionError({
-          path: docRef.path,
-          operation: 'update',
-          requestResourceData: updateData,
-        });
-        errorEmitter.emit('permission-error', permissionError);
-      });
-      setTherapistToDeactivate(null);
-  };
-
-  const handleExport = () => {
-    if (!filteredTherapists) return;
-    const headers = ['full_name', 'email', 'plan', 'status', 'created_at', 'updated_at'];
-    const csvContent = [
-      headers.join(','),
-      ...filteredTherapists.map(t => [
-        `"${t.full_name}"`,
-        t.email,
-        t.plan,
-        t.status,
-        t.created_at?.toDate()?.toISOString() || '',
-        t.updated_at?.toDate()?.toISOString() || '',
-      ].join(','))
-    ].join('\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    if (link.href) {
-      link.href = URL.createObjectURL(blob);
-      link.download = 'therapists.csv';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
-  };
-  
-  const filteredTherapists = useMemo(() => {
-    return therapists?.filter(therapist => {
-        const searchLower = searchTerm.toLowerCase();
-        const matchesSearch = searchTerm === '' ||
-            therapist.full_name.toLowerCase().includes(searchLower) ||
-            therapist.email.toLowerCase().includes(searchLower) ||
-            therapist.slug?.toLowerCase().includes(searchLower) ||
-            therapist.phone?.includes(searchTerm);
-
-        const matchesStatus = statusFilter === 'All' || therapist.status === statusFilter;
-
-        return matchesSearch && matchesStatus;
-    });
-  }, [therapists, searchTerm, statusFilter]);
+  const therapists = data ?? [];
+  const totalPages = Math.max(Math.ceil((count ?? therapists.length) / PAGE_SIZE), 1);
+  const currentPage = Math.min(page, totalPages);
 
   return (
-    <>
-      <Card>
-        <CardHeader>
-          <div className="flex justify-between items-center">
-            <div>
-              <CardTitle className="font-headline">Therapist Management</CardTitle>
-              <CardDescription>Manage therapist profiles, statuses, and information.</CardDescription>
-            </div>
-            <Button size="sm" onClick={() => setIsAddSheetOpen(true)}>
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Add Therapist
-            </Button>
+    <div>
+      <PageHeader
+        title="Therapists"
+        description="Overview of therapist records."
+        actions={
+          <div className="text-sm text-muted-foreground">
+            Total: {count ?? therapists.length} • Page {currentPage} / {totalPages}
           </div>
-          <div className="flex items-center gap-2 pt-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input 
-                placeholder="Search therapists..." 
-                className="pl-8" 
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="flex gap-1">
-                  Status <ChevronDown className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem onClick={() => setStatusFilter('All')}>All</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setStatusFilter('Active')}>Active</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setStatusFilter('Pending')}>Pending</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setStatusFilter('Inactive')}>Inactive</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <Button variant="outline" onClick={handleExport}>
-              <File className="mr-2 h-4 w-4" />
-              Export
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Plan</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead><span className="sr-only">Actions</span></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading && (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center">Loading...</TableCell>
-                </TableRow>
-              )}
-              {filteredTherapists?.map((therapist) => (
-                <TableRow key={therapist.id}>
-                  <TableCell className="font-medium">{therapist.full_name}</TableCell>
-                  <TableCell>{therapist.email}</TableCell>
-                  <TableCell>{therapist.plan_name}</TableCell>
-                  <TableCell>
-                    <Badge variant={statusVariantMap[therapist.status] || 'outline'}>
-                      {therapist.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button aria-haspopup="true" size="icon" variant="ghost">
-                          <MoreHorizontal className="h-4 w-4" />
-                          <span className="sr-only">Menu</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => router.push(`/therapists/${therapist.id}`)}>
-                            <User className="mr-2 h-4 w-4" /> View Profile
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleEdit(therapist)}>
-                            <Edit className="mr-2 h-4 w-4" /> Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => setTherapistToDeactivate(therapist)} className="text-destructive focus:text-destructive-foreground focus:bg-destructive">
-                            <UserX className="mr-2 h-4 w-4" /> Deactivate
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
-               {!isLoading && filteredTherapists?.length === 0 && (
-                <TableRow>
-                    <TableCell colSpan={5} className="text-center text-muted-foreground py-10">
-                        No therapists found for the selected criteria.
-                    </TableCell>
-                </TableRow>
-               )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-      
-      <AlertDialog open={!!therapistToDeactivate} onOpenChange={(isOpen) => !isOpen && setTherapistToDeactivate(null)}>
-        <AlertDialogContent>
-            <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-                This will set the therapist's status to "Inactive". They will not be able to log in but their data will be preserved.
-            </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => therapistToDeactivate && handleDeactivate(therapistToDeactivate)} className="bg-destructive hover:bg-destructive/90">Deactivate</AlertDialogAction>
-            </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        }
+      />
 
-      <AddTherapistSheet open={isAddSheetOpen} onOpenChange={setIsAddSheetOpen} />
-      <EditTherapistSheet open={isEditSheetOpen} onOpenChange={setIsEditSheetOpen} therapist={selectedTherapist} />
-    </>
+      <DataTable
+        data={therapists}
+        columns={[
+          { key: 'full_name', header: 'Name', cell: (row) => row.full_name ?? row.email ?? row.id },
+          { key: 'email', header: 'Email', cell: (row) => row.email ?? '—' },
+          { key: 'plan', header: 'Plan', cell: (row) => row.plan_name ?? row.plan ?? '—' },
+          {
+            key: 'status',
+            header: 'Status',
+            cell: (row) => <Badge variant={row.status === 'Active' ? 'default' : row.status === 'Pending' ? 'secondary' : 'destructive'}>{row.status ?? 'Pending'}</Badge>,
+          },
+          {
+            key: 'updated_at',
+            header: 'Updated',
+            cell: (row) => (row.updated_at ? new Date(row.updated_at).toLocaleString() : '—'),
+          },
+        ]}
+        emptyMessage="No therapists found."
+      />
+
+      <div className="mt-4 flex items-center justify-between text-sm">
+        <Link
+          href={`/therapists?page=${Math.max(currentPage - 1, 1)}`}
+          className={`text-primary ${currentPage === 1 ? 'pointer-events-none opacity-50' : ''}`}
+        >
+          Previous
+        </Link>
+        <Link
+          href={`/therapists?page=${Math.min(currentPage + 1, totalPages)}`}
+          className={`text-primary ${currentPage === totalPages ? 'pointer-events-none opacity-50' : ''}`}
+        >
+          Next
+        </Link>
+      </div>
+    </div>
   );
-};
-
-const TherapistsPage = () => (
-    <FirebaseClientProvider>
-        <TherapistsPageContent />
-    </FirebaseClientProvider>
-);
-
-export default TherapistsPage;
+}

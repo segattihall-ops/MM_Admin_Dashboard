@@ -22,75 +22,63 @@ import {
   Receipt,
   Gavel,
   FileClock,
-  ScanEye,
   LifeBuoy,
   Settings,
   LogOut,
-  Loader2,
 } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import AppHeader from './header';
-import { FirebaseClientProvider, useAuth, useUser } from '@/firebase';
-import { signOut } from 'firebase/auth';
 
-const menuItems = [
-    { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/users', label: 'Users', icon: Users },
-    { href: '/therapists', label: 'Therapists', icon: HeartHandshake },
-    { href: '/verification', label: 'Verification', icon: ShieldCheck },
-    { href: '/billing', label: 'Billing', icon: Receipt },
-    { href: '/content', label: 'Content', icon: FileText },
-    { href: '/subscriptions', label: 'Subscriptions', icon: CreditCard },
-    { href: '/seo', label: 'SEO', icon: BarChart },
-    { href: '/legal', label: 'Legal', icon: Gavel },
-    { href: '/logs', label: 'Logs', icon: FileClock },
-    { href: '/moderation', label: 'Moderation', icon: ScanEye },
-    { href: '/support', label: 'Support', icon: LifeBuoy },
-    { href: '/settings', label: 'Settings', icon: Settings },
-  ];
+const navSections = [
+  {
+    title: 'Core',
+    items: [
+      { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+      { href: '/users', label: 'Users', icon: Users },
+      { href: '/therapists', label: 'Therapists', icon: HeartHandshake },
+      { href: '/review', label: 'Review', icon: ShieldCheck },
+    ],
+  },
+  {
+    title: 'Business',
+    items: [
+      { href: '/billing', label: 'Billing', icon: Receipt },
+      { href: '/subscriptions', label: 'Subscriptions', icon: CreditCard },
+      { href: '/logs', label: 'Logs', icon: FileClock },
+    ],
+  },
+  {
+    title: 'Content',
+    items: [
+      { href: '/content', label: 'Content', icon: FileText },
+      { href: '/seo', label: 'SEO', icon: BarChart },
+    ],
+  },
+  {
+    title: 'Ops',
+    items: [
+      { href: '/support', label: 'Support', icon: LifeBuoy },
+      { href: '/legal', label: 'Legal', icon: Gavel },
+      { href: '/settings', label: 'Settings', icon: Settings },
+    ],
+  },
+];
 
-function ProtectedLayout({ children }: { children: React.ReactNode }) {
+type LayoutProps = {
+  children: React.ReactNode;
+  adminEmail?: string;
+};
+
+function ProtectedLayout({ children, adminEmail }: LayoutProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const auth = useAuth();
-  const { user, isUserLoading, userError } = useUser();
+
   const handleLogout = async () => {
-    if (auth) {
-      await signOut(auth);
-      router.push('/login');
-    }
+    await fetch('/api/auth/logout', { method: 'POST' });
+    router.push('/login');
   };
 
-  React.useEffect(() => {
-    // If loading is finished and there's no user, redirect to login
-    if (!isUserLoading && !user) {
-      router.replace('/login');
-    }
-     // Handle auth errors, e.g. token expired.
-    if(userError) {
-        console.error("Auth error, redirecting to login:", userError);
-        router.replace('/login');
-    }
-
-  }, [user, isUserLoading, userError, router]);
-
-  // While checking user auth, show a full screen loader
-  if (isUserLoading) {
-    return (
-      <div className="flex h-screen w-screen items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  // If user is not logged in, render nothing (or a loader) until redirect happens.
-  if (!user) {
-    return null;
-  }
-
-  // User is authenticated, render the main application layout
   return (
     <SidebarProvider>
       <Sidebar variant="inset" collapsible="icon">
@@ -109,55 +97,48 @@ function ProtectedLayout({ children }: { children: React.ReactNode }) {
         </SidebarHeader>
         <SidebarContent>
           <SidebarMenu>
-            {menuItems.map((item) => (
-              <SidebarMenuItem key={item.href}>
-                <Link href={item.href}>
-                  <SidebarMenuButton
-                    isActive={pathname.startsWith(item.href)}
-                    tooltip={item.label}
-                  >
-                    <item.icon />
-                    <span>{item.label}</span>
-                  </SidebarMenuButton>
-                </Link>
-              </SidebarMenuItem>
+            {navSections.map((section) => (
+              <div key={section.title} className="mb-2">
+                <div className="px-3 pb-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  {section.title}
+                </div>
+                {section.items.map((item) => (
+                  <SidebarMenuItem key={item.href}>
+                    <Link href={item.href}>
+                      <SidebarMenuButton isActive={pathname.startsWith(item.href)} tooltip={item.label}>
+                        <item.icon />
+                        <span>{item.label}</span>
+                      </SidebarMenuButton>
+                    </Link>
+                  </SidebarMenuItem>
+                ))}
+              </div>
             ))}
           </SidebarMenu>
         </SidebarContent>
         <SidebarFooter className="p-4 flex flex-col gap-2">
-            <SidebarMenu>
-                <SidebarMenuItem>
-                    <SidebarMenuButton onClick={handleLogout} tooltip="Logout">
-                        <LogOut />
-                        <span>Logout</span>
-                    </SidebarMenuButton>
-                </SidebarMenuItem>
-            </SidebarMenu>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton onClick={handleLogout} tooltip="Logout">
+                <LogOut />
+                <span>Logout</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
         </SidebarFooter>
       </Sidebar>
       <SidebarInset>
-        <AppHeader />
+        <AppHeader adminEmail={adminEmail} onLogout={handleLogout} />
         <main className="p-4 lg:p-6">{children}</main>
       </SidebarInset>
     </SidebarProvider>
   );
 }
 
-
-const MainLayout = ({ children }: { children: React.ReactNode }) => {
+const MainLayout = ({ children, adminEmail }: LayoutProps) => {
   const pathname = usePathname();
-  
-  // The FirebaseClientProvider needs to wrap any component that uses Firebase hooks.
-  // We conditionally render the protected layout or the public pages (like /login).
-  return (
-      <FirebaseClientProvider>
-          {pathname === '/login' ? (
-              children
-          ) : (
-              <ProtectedLayout>{children}</ProtectedLayout>
-          )}
-      </FirebaseClientProvider>
-  )
+
+  return pathname === '/login' ? <>{children}</> : <ProtectedLayout adminEmail={adminEmail}>{children}</ProtectedLayout>;
 };
 
 export default MainLayout;

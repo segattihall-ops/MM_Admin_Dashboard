@@ -1,0 +1,18 @@
+import { requireAdmin } from '@/lib/auth/server';
+import { failure, success } from '@/lib/http/responses';
+import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { logAdminAction } from '@/lib/supabase/crud';
+
+export async function POST(_: Request, { params }: { params: { id: string } }) {
+  const { admin } = await requireAdmin();
+  const { data, error } = await supabaseAdmin
+    .from('therapists_edit')
+    .update({ status: 'resolved', resolved_at: new Date().toISOString() })
+    .eq('id', params.id)
+    .select()
+    .maybeSingle();
+
+  if (error) return failure(error.message, 400);
+  await logAdminAction('resolve_therapist_edit', admin.id, { therapistEditId: params.id });
+  return success(data);
+}

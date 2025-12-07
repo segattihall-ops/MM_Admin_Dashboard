@@ -1,243 +1,168 @@
-'use client';
+import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { listPayments, listSubscriptions } from '@/lib/supabase/crud';
+import { PageHeader } from '@/components/layout/page-header';
+import { DataTable } from '@/components/common/data-table';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BarChart, LineChart, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip, Bar, Line } from 'recharts';
-import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Terminal, MoreHorizontal } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { FirebaseClientProvider, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query } from 'firebase/firestore';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 
-// Define specific types for chart data
-type RevenueData = {
-  date: string;
-  revenue: number;
-};
+const PAGE_SIZE = 20;
 
-type SubscriptionChartData = {
-  date: string;
-  count: number;
-};
+export default async function BillingPage({
+  searchParams,
+}: {
+  searchParams?: { page?: string; tab?: string; subPage?: string; payPage?: string };
+}) {
+  const tab = searchParams?.tab ?? 'overview';
+  const subPage = Math.max(parseInt(searchParams?.subPage ?? '1', 10) || 1, 1);
+  const payPage = Math.max(parseInt(searchParams?.payPage ?? '1', 10) || 1, 1);
 
-const revenueData: RevenueData[] = [];
-const subscriptionsChartData: SubscriptionChartData[] = [];
+  const [{ data: payments, error: paymentsError, count: paymentsCount }, { data: subscriptions, error: subsError, count: subsCount }] =
+    await Promise.all([listPayments(payPage, PAGE_SIZE), listSubscriptions(subPage, PAGE_SIZE)]);
 
+  if (paymentsError || subsError) {
+    return <div className="text-destructive">Failed to load billing data.</div>;
+  }
 
-type Subscription = {
-  id: string;
-  userId: string;
-  planId: string;
-  status: 'Active' | 'Canceled';
-  startDate: { toDate: () => Date };
-  endDate: { toDate: () => Date };
-};
+  const subs = subscriptions ?? [];
+  const pays = payments ?? [];
+  const totalSubs = subsCount ?? subs.length;
+  const totalPays = paymentsCount ?? pays.length;
+  const totalSubsPages = Math.max(Math.ceil(totalSubs / PAGE_SIZE), 1);
+  const totalPayPages = Math.max(Math.ceil(totalPays / PAGE_SIZE), 1);
 
-const statusVariantMap: { [key: string]: 'default' | 'destructive' | 'outline' } = {
-  'Active': 'default',
-  'Canceled': 'destructive',
-};
+  const statusVariantMap: Record<string, 'default' | 'destructive' | 'outline'> = {
+    Active: 'default',
+    Canceled: 'destructive',
+  };
 
-const planVariantMap: { [key: string]: 'default' | 'secondary' } = {
-    'Premium': 'default',
-    'Basic': 'secondary',
-};
-
-function SubscriptionsTable() {
-    const firestore = useFirestore();
-    const subscriptionsQuery = useMemoFirebase(() => {
-      if (!firestore) return null;
-      return query(collection(firestore, 'subscriptions'));
-    }, [firestore]);
-
-    const { data: subscriptionsData, isLoading } = useCollection<Subscription>(subscriptionsQuery);
-    
-    const formatDate = (date: { toDate: () => Date } | undefined) => {
-      if (!date) return 'N/A';
-      return date.toDate().toLocaleDateString();
-    }
-
-    const getUserName = (userId: string) => `User ${userId.substring(0, 6)}`;
-    const getPlanDetails = (planId: string) => {
-        const plans: {[key: string]: {name: string, amount: string}} = {
-            'premium-monthly': { name: 'Premium', amount: '$15.00/mo' },
-            'basic-monthly': { name: 'Basic', amount: '$5.00/mo' },
-            'free': { name: 'Free', amount: '$0.00/mo' }
-        };
-        return plans[planId] || { name: planId, amount: 'N/A' };
-    }
-
-    return (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>User</TableHead>
-              <TableHead>Plan</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Billing Period</TableHead>
-              <TableHead>Amount</TableHead>
-              <TableHead>
-                <span className="sr-only">Actions</span>
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-             {isLoading && (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center">Loading...</TableCell>
-                </TableRow>
-              )}
-            {subscriptionsData?.map((sub) => {
-              const planDetails = getPlanDetails(sub.planId);
-              return (
-                <TableRow key={sub.id}>
-                  <TableCell className="font-medium">{getUserName(sub.userId)}</TableCell>
-                  <TableCell>
-                    <Badge variant={planVariantMap[planDetails.name] || 'outline'}>{planDetails.name}</Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={statusVariantMap[sub.status] || 'outline'}>
-                      {sub.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{formatDate(sub.startDate)} - {formatDate(sub.endDate)}</TableCell>
-                  <TableCell>{planDetails.amount}</TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button aria-haspopup="true" size="icon" variant="ghost">
-                          <MoreHorizontal className="h-4 w-4" />
-                          <span className="sr-only">Toggle menu</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem>View Invoice</DropdownMenuItem>
-                        <DropdownMenuItem>Update Payment</DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive focus:text-destructive-foreground focus:bg-destructive">Cancel Subscription</DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              )
-            })}
-             {!isLoading && subscriptionsData?.length === 0 && (
-                <TableRow>
-                    <TableCell colSpan={6} className="text-center text-muted-foreground py-10">
-                        No subscriptions found.
-                    </TableCell>
-                </TableRow>
-               )}
-          </TableBody>
-        </Table>
-    )
-}
-
-const BillingPageContent = () => {
   return (
-    <>
-    <Alert className="mb-6">
-        <Terminal className="h-4 w-4" />
-        <AlertTitle>Development Mode</AlertTitle>
-        <AlertDescription>
-          This page is using sample data. To connect your Stripe account, enter your API keys on the <Button variant="link" className="p-0 h-auto"><a href="/settings">settings page</a></Button>.
-        </AlertDescription>
-      </Alert>
-    <Tabs defaultValue="overview">
+    <div>
+      <PageHeader
+        title="Billing"
+        description="Revenue, subscriptions, and payment records."
+        actions={
+          <div className="text-sm text-muted-foreground">
+            Subs: {totalSubs} | Payments: {totalPays}
+          </div>
+        }
+      />
+
+      <Tabs defaultValue={tab}>
         <TabsList className="mb-4">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="subscriptions">Subscriptions</TabsTrigger>
-            <TabsTrigger value="logs">Event Logs</TabsTrigger>
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="subscriptions">Subscriptions</TabsTrigger>
+          <TabsTrigger value="payments">Payments</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview">
-             <div className="grid gap-6 md:grid-cols-2">
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="font-headline">Revenue (Last 6 months)</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                         {revenueData.length > 0 ? (
-                            <ChartContainer config={{ revenue: { label: 'Revenue', color: 'hsl(var(--primary))' } }} className="h-[300px] w-full">
-                                <BarChart data={revenueData}>
-                                    <CartesianGrid vertical={false} />
-                                    <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} />
-                                    <YAxis tickLine={false} axisLine={false} tickMargin={8} />
-                                    <Tooltip content={<ChartTooltipContent />} />
-                                    <Bar dataKey="revenue" fill="var(--color-revenue)" radius={4} />
-                                </BarChart>
-                            </ChartContainer>
-                         ) : (
-                            <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                                Revenue data will appear here.
-                            </div>
-                         )}
-                    </CardContent>
-                </Card>
-                 <Card>
-                    <CardHeader>
-                        <CardTitle className="font-headline">New Subscriptions</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        {subscriptionsChartData.length > 0 ? (
-                            <ChartContainer config={{ count: { label: 'Subscriptions', color: 'hsl(var(--primary))' } }} className="h-[300px] w-full">
-                                <LineChart data={subscriptionsChartData}>
-                                    <CartesianGrid vertical={false} />
-                                    <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} />
-                                    <YAxis tickLine={false} axisLine={false} tickMargin={8} />
-                                    <Tooltip content={<ChartTooltipContent />} />
-                                    <Line type="monotone" dataKey="count" stroke="var(--color-count)" />
-                                </LineChart>
-                            </ChartContainer>
-                        ) : (
-                            <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                                New subscription data will appear here.
-                            </div>
-                        )}
-                    </CardContent>
-                </Card>
-            </div>
+          <Card>
+            <CardHeader>
+              <CardTitle className="font-headline">Key figures</CardTitle>
+              <CardDescription>Aggregated stats from Supabase.</CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-4 md:grid-cols-3">
+              <div>
+                <div className="text-sm text-muted-foreground">Total subscriptions</div>
+                <div className="text-2xl font-bold">{totalSubs}</div>
+              </div>
+              <div>
+                <div className="text-sm text-muted-foreground">Total payments</div>
+                <div className="text-2xl font-bold">{totalPays}</div>
+              </div>
+              <div>
+                <div className="text-sm text-muted-foreground">Active subs</div>
+                <div className="text-2xl font-bold">{subs.filter((s) => s.status === 'Active').length}</div>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="subscriptions">
-            <Card>
-                <CardHeader>
-                    <CardTitle className="font-headline">Subscription Management</CardTitle>
-                    <CardDescription>Overview of all active and past subscriptions.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                   <SubscriptionsTable />
-                </CardContent>
-            </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle className="font-headline">Subscription Management</CardTitle>
+              <CardDescription>Overview of active and past subscriptions.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <DataTable
+                data={subs}
+                columns={[
+                  { key: 'user_id', header: 'User', cell: (row) => row.user_id ?? '-' },
+                  { key: 'plan_id', header: 'Plan', cell: (row) => row.plan_id ?? '-' },
+                  {
+                    key: 'status',
+                    header: 'Status',
+                    cell: (row) => <Badge variant={statusVariantMap[row.status ?? ''] ?? 'outline'}>{row.status ?? 'Unknown'}</Badge>,
+                  },
+                  { key: 'start_date', header: 'Start', cell: (row) => (row.start_date ? new Date(row.start_date).toLocaleDateString() : '-') },
+                  { key: 'end_date', header: 'End', cell: (row) => (row.end_date ? new Date(row.end_date).toLocaleDateString() : '-') },
+                ]}
+                emptyMessage="No subscriptions found."
+              />
+              <div className="mt-4 flex items-center justify-between text-sm">
+                <Link
+                  href={`/billing?tab=subscriptions&subPage=${Math.max(subPage - 1, 1)}`}
+                  className={`text-primary ${subPage === 1 ? 'pointer-events-none opacity-50' : ''}`}
+                >
+                  Previous
+                </Link>
+                <Link
+                  href={`/billing?tab=subscriptions&subPage=${Math.min(subPage + 1, totalSubsPages)}`}
+                  className={`text-primary ${subPage === totalSubsPages ? 'pointer-events-none opacity-50' : ''}`}
+                >
+                  Next
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
-        <TabsContent value="logs">
-            <Card>
-                <CardHeader>
-                    <CardTitle className="font-headline">Stripe Event Logs</CardTitle>
-                    <CardDescription>Monitor all webhook events from Stripe.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                   <p className="text-center text-muted-foreground py-10">Stripe event logs will appear here after setup.</p>
-                </CardContent>
-            </Card>
+        <TabsContent value="payments">
+          <Card>
+            <CardHeader>
+              <CardTitle className="font-headline">Payments</CardTitle>
+              <CardDescription>Transactions synced from Supabase.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <DataTable
+                data={pays}
+                columns={[
+                  { key: 'id', header: 'ID', cell: (row) => <span className="font-mono text-xs">{row.id}</span> },
+                  { key: 'user_id', header: 'User', cell: (row) => row.user_id ?? '-' },
+                  {
+                    key: 'status',
+                    header: 'Status',
+                    cell: (row) => <Badge variant={row.status === 'failed' ? 'destructive' : 'default'}>{row.status ?? 'unknown'}</Badge>,
+                  },
+                  {
+                    key: 'amount',
+                    header: 'Amount',
+                    cell: (row) => (row.amount ?? 0).toLocaleString('en-US', { style: 'currency', currency: 'USD' }),
+                    align: 'right',
+                  },
+                  { key: 'paid_at', header: 'Date', cell: (row) => (row.paid_at ? new Date(row.paid_at).toLocaleString() : '-') },
+                ]}
+                emptyMessage="No payments yet."
+              />
+              <div className="mt-4 flex items-center justify-between text-sm">
+                <Link
+                  href={`/billing?tab=payments&payPage=${Math.max(payPage - 1, 1)}`}
+                  className={`text-primary ${payPage === 1 ? 'pointer-events-none opacity-50' : ''}`}
+                >
+                  Previous
+                </Link>
+                <Link
+                  href={`/billing?tab=payments&payPage=${Math.min(payPage + 1, totalPayPages)}`}
+                  className={`text-primary ${payPage === totalPayPages ? 'pointer-events-none opacity-50' : ''}`}
+                >
+                  Next
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
-    </Tabs>
-    </>
+      </Tabs>
+    </div>
   );
-};
-
-export default function BillingPage() {
-    return (
-        <FirebaseClientProvider>
-            <BillingPageContent />
-        </FirebaseClientProvider>
-    );
 }

@@ -1,197 +1,97 @@
-'use client';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
-import {
-  Users,
-  CreditCard,
-  DollarSign,
-  UserPlus,
-  TrendingUp,
-  TrendingDown,
-} from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
-import { FirebaseClientProvider, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, where, limit, orderBy, Timestamp } from 'firebase/firestore';
-import { Skeleton } from '@/components/ui/skeleton';
-import { useMemo } from 'react';
-import { subDays, format } from 'date-fns';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { listPayments, listSubscriptions, listTherapists, listUsers } from '@/lib/supabase/crud';
+import { PageHeader } from '@/components/layout/page-header';
 
-const iconMap = {
-  users: Users,
-  creditCard: CreditCard,
-  dollarSign: DollarSign,
-  userPlus: UserPlus,
-};
+export default async function DashboardPage() {
+  const [{ data: users }, { data: subscriptions }, { data: therapists }, { data: payments }] = await Promise.all([
+    listUsers(),
+    listSubscriptions(),
+    listTherapists(),
+    listPayments(),
+  ]);
 
-type User = {
-  id: string;
-  created_at?: Timestamp; // Assuming users might have a creation date
-};
-type Subscription = {
-  id: string;
-  status: string;
-}
-type Article = {
-  id: string;
-  author_name: string;
-  title: string;
-  created_at: { toDate: () => Date };
-}
+  const totalUsers = users?.length ?? 0;
+  const totalSubs = subscriptions?.length ?? 0;
+  const totalTherapists = therapists?.length ?? 0;
+  const totalPayments = payments?.length ?? 0;
 
-const DashboardPageContent = () => {
-  const firestore = useFirestore();
+  const monthlyRevenue = payments?.reduce((acc, payment) => acc + (payment.amount ?? 0), 0) ?? 0;
+  const newSignups24h =
+    users?.filter((u) => u.created_at && Date.now() - new Date(u.created_at).getTime() < 24 * 60 * 60 * 1000).length ?? 0;
 
-  // Queries
-  const usersQuery = useMemoFirebase(() => firestore ? collection(firestore, 'users') : null, [firestore]);
-  const activeSubsQuery = useMemoFirebase(() => firestore ? query(collection(firestore, 'subscriptions'), where('status', '==', 'Active')) : null, [firestore]);
-  const recentArticlesQuery = useMemoFirebase(() => firestore ? query(collection(firestore, 'articles'), orderBy('created_at', 'desc'), limit(4)) : null, [firestore]);
-  
-  const { data: usersData, isLoading: isLoadingUsers } = useCollection<User>(usersQuery);
-  const { data: activeSubsData, isLoading: isLoadingSubs } = useCollection<Subscription>(activeSubsQuery);
-  const { data: recentArticles, isLoading: isLoadingArticles } = useCollection<Article>(recentArticlesQuery);
-
-  const userActivityData = useMemo(() => {
-    if (!usersData) return [];
-
-    const last7Days = Array.from({ length: 7 }, (_, i) => subDays(new Date(), i)).reverse();
-    const dailySignups = last7Days.map(date => {
-        const dateString = format(date, 'MMM d');
-        const count = usersData.filter(user => {
-            if (!user.created_at) return false;
-            const userDate = user.created_at.toDate();
-            return format(userDate, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd');
-        }).length;
-        return { date: dateString, users: count };
-    });
-
-    return dailySignups;
-  }, [usersData]);
-
-
-  const statsCards = [
-    { title: 'Total Users', value: usersData?.length.toString() || '0', isLoading: isLoadingUsers, icon: 'users', change: '+0%' },
-    { title: 'Active Subscriptions', value: activeSubsData?.length.toString() || '0', isLoading: isLoadingSubs, icon: 'creditCard', change: '+0%' },
-    { title: 'Monthly Revenue', value: '$0', isLoading: false, icon: 'dollarSign', change: '+0%' },
-    { title: 'New Signups (24h)', value: '0', isLoading: false, icon: 'userPlus', change: '+0%' },
-  ];
-
-  const getTimeAgo = (date: Date | undefined) => {
-    if(!date) return '';
-    const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
-    let interval = seconds / 31536000;
-    if (interval > 1) return Math.floor(interval) + " years ago";
-    interval = seconds / 2592000;
-    if (interval > 1) return Math.floor(interval) + " months ago";
-    interval = seconds / 86400;
-    if (interval > 1) return Math.floor(interval) + " days ago";
-    interval = seconds / 3600;
-    if (interval > 1) return Math.floor(interval) + " hours ago";
-    interval = seconds / 60;
-    if (interval > 1) return Math.floor(interval) + " minutes ago";
-    return Math.floor(seconds) + " seconds ago";
-  }
+  const recentTherapists = therapists?.slice(0, 5) ?? [];
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="space-y-6">
+      <PageHeader title="Dashboard" description="Admin overview powered by Supabase data." />
+
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {statsCards.map((card, index) => {
-          const Icon = iconMap[card.icon as keyof typeof iconMap];
-          const isPositive = card.change.startsWith('+');
-          return (
-            <Card key={index} className="bg-card hover:bg-card/80 transition-colors">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">{card.title}</CardTitle>
-                <Icon className="h-5 w-5 text-primary" />
-              </CardHeader>
-              <CardContent>
-                {card.isLoading ? <Skeleton className="h-7 w-24" /> : <div className="text-2xl font-bold font-headline">{card.value}</div>}
-                <p className={`text-xs mt-1 flex items-center gap-1 ${isPositive ? 'text-green-400' : 'text-red-400'}`}>
-                   {/* Static change for now */}
-                  {isPositive ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
-                  {card.change} from last month
-                </p>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
-      <div className="grid gap-6 lg:grid-cols-5">
-        <Card className="lg:col-span-3">
+        <Card>
           <CardHeader>
-            <CardTitle className="font-headline">User Activity (Last 7 Days)</CardTitle>
-          </CardHeader>
-          <CardContent className="pl-2">
-             {isLoadingUsers ? (
-                <div className="h-[300px] flex items-center justify-center">
-                    <Skeleton className="w-full h-full" />
-                </div>
-             ) : userActivityData.length > 0 ? (
-                <ChartContainer config={{ users: { label: 'New Users', color: 'hsl(var(--primary))' } }} className="h-[300px] w-full">
-                    <BarChart data={userActivityData}>
-                        <CartesianGrid vertical={false} />
-                        <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} />
-                        <YAxis tickLine={false} axisLine={false} tickMargin={8} allowDecimals={false}/>
-                        <Tooltip content={<ChartTooltipContent />} />
-                        <Bar dataKey="users" fill="var(--color-users)" radius={4} />
-                    </BarChart>
-                </ChartContainer>
-             ) : (
-                <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                    User activity data will appear here.
-                </div>
-             )}
-          </CardContent>
-        </Card>
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle className="font-headline">Recent Activity</CardTitle>
+            <CardTitle className="text-sm text-muted-foreground">Total Users</CardTitle>
+            <CardDescription>Accounts in the system</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {isLoadingArticles && Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="flex items-center gap-4">
-                     <Skeleton className="h-9 w-9 rounded-full" />
-                      <div className="flex-1 space-y-2">
-                          <Skeleton className="h-4 w-3/4" />
-                      </div>
-                  </div>
-              ))}
-              {!isLoadingArticles && recentArticles?.map((activity, index) => (
-                <div key={index} className="flex items-center gap-4">
-                  <Avatar className="h-9 w-9">
-                    <AvatarImage src={`https://picsum.photos/seed/${activity.id}/40/40`} data-ai-hint="person face" alt={activity.author_name} />
-                    <AvatarFallback>{activity.author_name.charAt(0)}</AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 text-sm">
-                    <span className="font-medium">{activity.author_name}</span>
-                    <span className="text-muted-foreground"> published a new article: "{activity.title}".</span>
-                  </div>
-                  <div className="text-xs text-muted-foreground">{getTimeAgo(activity.created_at?.toDate())}</div>
-                </div>
-              ))}
-               {!isLoadingArticles && recentArticles?.length === 0 && (
-                 <div className="text-center text-muted-foreground py-10">
-                    No recent activity.
-                 </div>
-                )}
-            </div>
+            <div className="text-3xl font-bold">{totalUsers}</div>
+            <div className="text-xs text-muted-foreground mt-1">New (24h): {newSignups24h}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm text-muted-foreground">Subscriptions</CardTitle>
+            <CardDescription>Total active and past</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">{totalSubs}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm text-muted-foreground">Payments</CardTitle>
+            <CardDescription>Count this period</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">{totalPayments}</div>
+            <div className="text-xs text-muted-foreground mt-1">Sum: {monthlyRevenue.toLocaleString('en-US', { style: 'currency', currency: 'USD' })}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm text-muted-foreground">Therapists</CardTitle>
+            <CardDescription>Profiles in Supabase</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">{totalTherapists}</div>
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="font-headline">Recent Therapist Activity</CardTitle>
+          <CardDescription>Latest updates pulled server-side.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {recentTherapists.map((t) => (
+              <div key={t.id} className="flex items-center justify-between border-b border-border/50 pb-3 last:border-none last:pb-0">
+                <div>
+                  <div className="font-medium">{t.full_name ?? t.email ?? t.id}</div>
+                  <div className="text-xs text-muted-foreground">{t.status ?? 'Unknown'} • {t.plan_name ?? t.plan ?? 'No plan'}</div>
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  {t.updated_at ? new Date(t.updated_at).toLocaleString() : '—'}
+                </div>
+              </div>
+            ))}
+            {recentTherapists.length === 0 && (
+              <div className="text-muted-foreground text-center py-6">No therapist activity yet.</div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
-};
-
-
-const DashboardPage = () => {
-    return (
-        <FirebaseClientProvider>
-            <DashboardPageContent />
-        </FirebaseClientProvider>
-    );
-};
-
-export default DashboardPage;
+}
 
     
