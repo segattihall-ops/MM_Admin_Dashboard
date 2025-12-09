@@ -6,8 +6,9 @@ import { Badge } from '@/components/ui/badge';
 
 const PAGE_SIZE = 20;
 
-export default async function UsersPage({ searchParams }: { searchParams?: { page?: string } }) {
-  const page = Math.max(parseInt(searchParams?.page ?? '1', 10) || 1, 1);
+export default async function UsersPage({ searchParams }: { searchParams?: Promise<{ page?: string }> }) {
+  const params = await searchParams;
+  const page = Math.max(parseInt(params?.page ?? '1', 10) || 1, 1);
   const { data, error, count } = await listUsers(page, PAGE_SIZE);
 
   if (error) {
@@ -36,18 +37,18 @@ export default async function UsersPage({ searchParams }: { searchParams?: { pag
           {
             key: 'name',
             header: 'User',
-            cell: (row) => `${row.first_name ?? ''} ${row.last_name ?? ''}`.trim() || row.email || row.id,
+            cell: (row: any) => `${row.first_name ?? ''} ${row.last_name ?? ''}`.trim() || row.email || row.id,
           },
-          { key: 'email', header: 'Email', cell: (row) => row.email ?? '—' },
+          { key: 'email', header: 'Email', cell: (row: any) => row.email ?? '—' },
           {
             key: 'status',
             header: 'Status',
-            cell: (row) => <Badge variant={row.status === 'Inactive' ? 'destructive' : 'default'}>{row.status ?? 'Active'}</Badge>,
+            cell: (row: any) => <Badge variant={row.status === 'Inactive' ? 'destructive' : 'default'}>{row.status ?? 'Active'}</Badge>,
           },
           {
             key: 'last_login',
             header: 'Last Login',
-            cell: (row) => (row.last_login ? new Date(row.last_login).toLocaleString() : '—'),
+            cell: (row: any) => (row.last_login ? new Date(row.last_login).toLocaleString() : '—'),
           },
         ]}
         emptyMessage="No users found."

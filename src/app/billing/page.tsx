@@ -11,11 +11,12 @@ const PAGE_SIZE = 20;
 export default async function BillingPage({
   searchParams,
 }: {
-  searchParams?: { page?: string; tab?: string; subPage?: string; payPage?: string };
+  searchParams?: Promise<{ page?: string; tab?: string; subPage?: string; payPage?: string }>;
 }) {
-  const tab = searchParams?.tab ?? 'overview';
-  const subPage = Math.max(parseInt(searchParams?.subPage ?? '1', 10) || 1, 1);
-  const payPage = Math.max(parseInt(searchParams?.payPage ?? '1', 10) || 1, 1);
+  const params = await searchParams;
+  const tab = params?.tab ?? 'overview';
+  const subPage = Math.max(parseInt(params?.subPage ?? '1', 10) || 1, 1);
+  const payPage = Math.max(parseInt(params?.payPage ?? '1', 10) || 1, 1);
 
   const [{ data: payments, error: paymentsError, count: paymentsCount }, { data: subscriptions, error: subsError, count: subsCount }] =
     await Promise.all([listPayments(payPage, PAGE_SIZE), listSubscriptions(subPage, PAGE_SIZE)]);

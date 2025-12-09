@@ -4,12 +4,13 @@ import { Badge } from '@/components/ui/badge';
 import { getTherapist, listVerificationData } from '@/lib/supabase/crud';
 
 type Props = {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 };
 
 export default async function TherapistDetailPage({ params }: Props) {
+  const { id } = await params;
   const [{ data: therapist }, { data: verification }] = await Promise.all([
-    getTherapist(params.id),
+    getTherapist(id),
     listVerificationData(),
   ]);
 

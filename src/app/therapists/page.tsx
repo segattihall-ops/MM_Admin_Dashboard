@@ -6,8 +6,9 @@ import { Badge } from '@/components/ui/badge';
 
 const PAGE_SIZE = 20;
 
-export default async function TherapistsPage({ searchParams }: { searchParams?: { page?: string } }) {
-  const page = Math.max(parseInt(searchParams?.page ?? '1', 10) || 1, 1);
+export default async function TherapistsPage({ searchParams }: { searchParams?: Promise<{ page?: string }> }) {
+  const params = await searchParams;
+  const page = Math.max(parseInt(params?.page ?? '1', 10) || 1, 1);
   const { data, error, count } = await listTherapists(page, PAGE_SIZE);
   if (error) {
     return <div className="text-destructive">Failed to load therapists: {error.message}</div>;

@@ -169,18 +169,18 @@ export function hasPermission(admin: AdminRow, action: string): boolean {
     return true;
   }
 
-  // Check role-based permissions
+  // Check role-based permissions (superadmin already handled above)
   switch (action) {
     case 'create_admin':
     case 'delete_admin':
     case 'update_admin_role':
-      return role === 'superadmin';
+      return false; // Only superadmin can do this (already returned above)
 
     case 'approve_therapist':
     case 'reject_therapist':
     case 'update_user':
     case 'delete_user':
-      return role === 'superadmin' || role === 'manager';
+      return role === 'manager'; // Superadmin already returned, so only manager can do this
 
     case 'view_users':
     case 'view_therapists':

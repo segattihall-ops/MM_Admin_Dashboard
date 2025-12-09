@@ -51,7 +51,7 @@ export async function listUsers(page = 1, pageSize = 20) {
   return {
     data: data?.users ?? null,
     error: error ? { message: error.message, code: error.code || 'AUTH_ERROR' } : null,
-    count: data?.total ?? null,
+    count: (data && 'total' in data) ? data.total : null,
   };
 }
 

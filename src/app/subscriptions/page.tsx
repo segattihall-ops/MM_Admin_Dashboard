@@ -8,8 +8,9 @@ import { Button } from '@/components/ui/button';
 
 const PAGE_SIZE = 20;
 
-export default async function SubscriptionsPage({ searchParams }: { searchParams?: { page?: string } }) {
-  const page = Math.max(parseInt(searchParams?.page ?? '1', 10) || 1, 1);
+export default async function SubscriptionsPage({ searchParams }: { searchParams?: Promise<{ page?: string }> }) {
+  const params = await searchParams;
+  const page = Math.max(parseInt(params?.page ?? '1', 10) || 1, 1);
   const { data, error, count } = await listSubscriptions(page, PAGE_SIZE);
   if (error) {
     return <div className="text-destructive">Failed to load subscriptions: {error.message}</div>;
