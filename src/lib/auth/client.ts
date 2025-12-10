@@ -62,12 +62,15 @@ export async function signInWithPhoneOTP(phone: string) {
  * After verification, calls backend to set httpOnly cookies
  */
 export async function verifyOTP(params: { email?: string; phone?: string; token: string; type: 'email' | 'sms' }) {
-  const { data, error } = await supabaseClient.auth.verifyOtp({
-    email: params.email,
-    phone: params.phone,
+  const otpParams: any = {
     token: params.token,
     type: params.type,
-  });
+  };
+
+  if (params.email) otpParams.email = params.email;
+  if (params.phone) otpParams.phone = params.phone;
+
+  const { data, error } = await supabaseClient.auth.verifyOtp(otpParams);
 
   if (error) {
     throw error;
