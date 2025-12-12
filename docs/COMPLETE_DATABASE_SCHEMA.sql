@@ -564,11 +564,11 @@ GRANT EXECUTE ON FUNCTION public.log_admin_action TO service_role;
 -- =============================================
 
 -- Insert default settings
-INSERT INTO public.settings (id, value, description)
+INSERT INTO public.settings (id, metadata, description)
 VALUES
-  ('maintenance_mode', 'false'::jsonb, 'Enable/disable maintenance mode'),
-  ('registration_enabled', 'true'::jsonb, 'Enable/disable new user registration'),
-  ('therapist_approval_required', 'true'::jsonb, 'Require admin approval for therapist profiles')
+  ('maintenance_mode', '{"enabled": false}'::jsonb, 'Enable/disable maintenance mode'),
+  ('registration_enabled', '{"enabled": true}'::jsonb, 'Enable/disable new user registration'),
+  ('therapist_approval_required', '{"enabled": true}'::jsonb, 'Require admin approval for therapist profiles')
 ON CONFLICT (id) DO NOTHING;
 
 -- =============================================
