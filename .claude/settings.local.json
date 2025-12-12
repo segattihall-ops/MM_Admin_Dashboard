@@ -10,7 +10,8 @@
       "Bash(npm run build:*)",
       "Bash(grep:*)",
       "Bash(rm:*)",
-      "Bash(gh auth status:*)"
+      "Bash(gh auth status:*)",
+      "Bash(git remote:*)"
     ],
     "deny": [],
     "ask": []
