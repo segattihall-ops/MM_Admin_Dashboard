@@ -45,7 +45,7 @@ export default async function ContentPage({ searchParams }: { searchParams?: Pro
                 key: 'status',
                 header: 'Status',
                 cell: (row) => (
-                  <Badge variant={row.status === 'approved' ? 'default' : row.status === 'rejected' ? 'destructive' : 'secondary'}>
+                  <Badge variant={row.status === 'Approved' ? 'default' : row.status === 'Rejected' ? 'destructive' : 'secondary'}>
                     {row.status ?? 'Pending'}
                   </Badge>
                 ),

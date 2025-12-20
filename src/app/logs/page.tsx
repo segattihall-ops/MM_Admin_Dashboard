@@ -29,7 +29,7 @@ export default async function LogsPage() {
             {data?.map((payment) => (
               <TableRow key={payment.id}>
                 <TableCell>
-                  <Badge variant={payment.status === 'failed' ? 'destructive' : 'default'}>{payment.status ?? 'unknown'}</Badge>
+                  <Badge variant={payment.status === 'Failed' ? 'destructive' : 'default'}>{payment.status ?? 'unknown'}</Badge>
                 </TableCell>
                 <TableCell className="font-mono text-xs">Payment {payment.id}</TableCell>
                 <TableCell>billing</TableCell>

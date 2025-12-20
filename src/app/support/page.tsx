@@ -30,7 +30,7 @@ export default async function SupportPage() {
               <TableRow key={row.id}>
                 <TableCell className="font-medium">{row.user_id}</TableCell>
                 <TableCell>
-                  <Badge variant={row.status === 'resolved' ? 'default' : 'secondary'}>{row.status ?? 'Pending'}</Badge>
+                  <Badge variant={row.status === 'Approved' ? 'default' : 'secondary'}>{row.status ?? 'Pending'}</Badge>
                 </TableCell>
                 <TableCell>{row.created_at ? new Date(row.created_at).toLocaleString() : '—'}</TableCell>
                 <TableCell className="text-xs text-muted-foreground">

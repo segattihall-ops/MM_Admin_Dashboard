@@ -8,7 +8,7 @@ export async function POST(_: Request, { params }: { params: Promise<{ id: strin
   const { id } = await params;
   const { data, error } = await supabaseAdmin
     .from('profile_edits')
-    .update({ status: 'resolved', resolved_at: new Date().toISOString() })
+    .update({ status: 'Approved', resolved_at: new Date().toISOString() })
     .eq('id', id)
     .select()
     .maybeSingle();

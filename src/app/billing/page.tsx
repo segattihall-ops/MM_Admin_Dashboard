@@ -134,7 +134,7 @@ export default async function BillingPage({
                   {
                     key: 'status',
                     header: 'Status',
-                    cell: (row) => <Badge variant={row.status === 'failed' ? 'destructive' : 'default'}>{row.status ?? 'unknown'}</Badge>,
+                    cell: (row) => <Badge variant={row.status === 'Failed' ? 'destructive' : 'default'}>{row.status ?? 'unknown'}</Badge>,
                   },
                   {
                     key: 'amount',

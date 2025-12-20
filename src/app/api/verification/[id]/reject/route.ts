@@ -11,7 +11,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
   const { data, error } = await supabaseAdmin
     .from('verification_data')
-    .update({ status: 'rejected', rejection_reason: reason, reviewed_at: new Date().toISOString(), reviewed_by: admin.id })
+    .update({ status: 'Rejected', rejection_reason: reason, reviewed_at: new Date().toISOString(), reviewed_by: admin.id })
     .eq('id', id)
     .select()
     .maybeSingle();

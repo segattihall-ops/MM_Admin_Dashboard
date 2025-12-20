@@ -5,6 +5,26 @@
 export type AdminRole = "superadmin" | "manager" | "viewer";
 
 /**
+ * Therapist status types (must match database CHECK constraint)
+ */
+export type TherapistStatus = 'Pending' | 'Active' | 'Rejected' | 'Suspended';
+
+/**
+ * Payment status types (must match database CHECK constraint)
+ */
+export type PaymentStatus = 'Pending' | 'Completed' | 'Failed' | 'Refunded';
+
+/**
+ * Subscription status types (must match database CHECK constraint)
+ */
+export type SubscriptionStatus = 'Active' | 'Canceled' | 'Expired' | 'PastDue';
+
+/**
+ * Edit request status types (must match database CHECK constraint)
+ */
+export type EditRequestStatus = 'Pending' | 'Approved' | 'Rejected';
+
+/**
  * Shape of the row returned from Supabase 'admins' table
  */
 export interface AdminRow {
@@ -25,12 +45,17 @@ export interface AdminContext {
 }
 
 /**
+ * Verification status types (must match database CHECK constraint)
+ */
+export type VerificationStatus = 'Pending' | 'Approved' | 'Rejected';
+
+/**
  * Verification data for therapist documents
  */
 export interface VerificationDataRow {
   id: string;
   therapist_id: string;
-  status: string;
+  status: VerificationStatus;
   document_url: string | null;
   card_url: string | null;
   selfie_url: string | null;
@@ -48,7 +73,7 @@ export interface ProfileEditRow {
   id: string;
   user_id: string;
   changes: Record<string, any>;
-  status: string;
+  status: EditRequestStatus;
   created_at: string;
   resolved_at: string | null;
 }
@@ -60,7 +85,7 @@ export interface TherapistEditRow {
   id: string;
   therapist_id: string;
   changes: Record<string, any>;
-  status: string;
+  status: EditRequestStatus;
   created_at: string;
   resolved_at: string | null;
 }
@@ -73,7 +98,7 @@ export interface ApplicationRow {
   user_id: string;
   full_name: string;
   email: string;
-  status: string;
+  status: EditRequestStatus;
   submitted_at: string | null;
   reviewed_at: string | null;
   notes: string | null;
@@ -97,7 +122,7 @@ export interface PaymentRow {
   id: string;
   user_id: string;
   amount: number;
-  status: string;
+  status: PaymentStatus;
   paid_at: string | null;
   invoice_id: string | null;
   created_at: string;
@@ -110,7 +135,7 @@ export interface SubscriptionRow {
   id: string;
   user_id: string;
   plan_id: string;
-  status: string;
+  status: SubscriptionStatus;
   start_date: string | null;
   end_date: string | null;
   canceled_at: string | null;
@@ -125,10 +150,10 @@ export interface TherapistRow {
   user_id: string;
   full_name: string | null;
   email: string | null;
-  status: string | null;
+  status: TherapistStatus | null;
   plan: string | null;
   plan_name: string | null;
-  subscription_status: string | null;
+  subscription_status: SubscriptionStatus | null;
   slug: string | null;
   phone: string | null;
   reviewed_at: string | null;

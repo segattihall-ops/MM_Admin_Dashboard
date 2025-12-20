@@ -39,7 +39,7 @@ export default function ReviewClient({ verification, profileEdits, therapistEdit
   const handleVerification = (id: string, action: 'approve' | 'reject') => {
     startTransition(() => {
       callAction(`/api/verification/${id}/${action}`).then(() => {
-        setVerifications((prev) => prev.map((item) => (item.id === id ? { ...item, status: action === 'approve' ? 'approved' : 'rejected' } : item)));
+        setVerifications((prev) => prev.map((item) => (item.id === id ? { ...item, status: action === 'approve' ? 'Approved' : 'Rejected' } : item)));
         toast({ title: `Verification ${action}d` });
       }).catch((e) => toast({ title: 'Error', description: e.message, variant: 'destructive' }));
     });
@@ -48,7 +48,7 @@ export default function ReviewClient({ verification, profileEdits, therapistEdit
   const handleResolveProfile = (id: string) => {
     startTransition(() => {
       callAction(`/api/profile-edits/${id}/resolve`).then(() => {
-        setProfiles((prev) => prev.map((item) => (item.id === id ? { ...item, status: 'resolved' } : item)));
+        setProfiles((prev) => prev.map((item) => (item.id === id ? { ...item, status: 'Approved' } : item)));
         toast({ title: 'Profile edit resolved' });
       }).catch((e) => toast({ title: 'Error', description: e.message, variant: 'destructive' }));
     });
@@ -57,7 +57,7 @@ export default function ReviewClient({ verification, profileEdits, therapistEdit
   const handleResolveTherapist = (id: string) => {
     startTransition(() => {
       callAction(`/api/therapist-edits/${id}/resolve`).then(() => {
-        setTherapists((prev) => prev.map((item) => (item.id === id ? { ...item, status: 'resolved' } : item)));
+        setTherapists((prev) => prev.map((item) => (item.id === id ? { ...item, status: 'Approved' } : item)));
         toast({ title: 'Therapist edit resolved' });
       }).catch((e) => toast({ title: 'Error', description: e.message, variant: 'destructive' }));
     });
@@ -88,7 +88,7 @@ export default function ReviewClient({ verification, profileEdits, therapistEdit
                   {
                     key: 'status',
                     header: 'Status',
-                    cell: (row) => <Badge variant={row.status === 'approved' ? 'default' : row.status === 'rejected' ? 'destructive' : 'secondary'}>{row.status ?? 'Pending'}</Badge>,
+                    cell: (row) => <Badge variant={row.status === 'Approved' ? 'default' : row.status === 'Rejected' ? 'destructive' : 'secondary'}>{row.status ?? 'Pending'}</Badge>,
                   },
                   { key: 'submitted_at', header: 'Submitted', cell: (row) => (row.submitted_at ? new Date(row.submitted_at).toLocaleString() : '—') },
                   {
@@ -138,7 +138,7 @@ export default function ReviewClient({ verification, profileEdits, therapistEdit
                   {
                     key: 'status',
                     header: 'Status',
-                    cell: (row) => <Badge variant={row.status === 'resolved' ? 'default' : 'secondary'}>{row.status ?? 'Pending'}</Badge>,
+                    cell: (row) => <Badge variant={row.status === 'Approved' ? 'default' : 'secondary'}>{row.status ?? 'Pending'}</Badge>,
                   },
                   { key: 'created_at', header: 'Submitted', cell: (row) => (row.created_at ? new Date(row.created_at).toLocaleString() : '—') },
                   {
@@ -176,7 +176,7 @@ export default function ReviewClient({ verification, profileEdits, therapistEdit
                   {
                     key: 'status',
                     header: 'Status',
-                    cell: (row) => <Badge variant={row.status === 'resolved' ? 'default' : 'secondary'}>{row.status ?? 'Pending'}</Badge>,
+                    cell: (row) => <Badge variant={row.status === 'Approved' ? 'default' : 'secondary'}>{row.status ?? 'Pending'}</Badge>,
                   },
                   { key: 'created_at', header: 'Submitted', cell: (row) => (row.created_at ? new Date(row.created_at).toLocaleString() : '—') },
                   {
