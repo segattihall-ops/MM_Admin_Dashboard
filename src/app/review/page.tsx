@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { listVerificationData, listProfileEdits, listTherapistEdits } from '@/lib/supabase/crud';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import ReviewClient from './review-client';
@@ -94,11 +95,13 @@ export default async function ReviewPage() {
   ]);
 
   return (
-    <ReviewClient
-      verification={verifications ?? []}
-      profileEdits={profileEdits ?? []}
-      therapistEdits={therapistEdits ?? []}
-      photos={photos}
-    />
+    <Suspense fallback={<div className="text-sm text-muted-foreground">Loading review queue...</div>}>
+      <ReviewClient
+        verification={verifications ?? []}
+        profileEdits={profileEdits ?? []}
+        therapistEdits={therapistEdits ?? []}
+        photos={photos}
+      />
+    </Suspense>
   );
 }
